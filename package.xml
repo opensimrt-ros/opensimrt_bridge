@@ -2,7 +2,7 @@
 <package format="2">
   <name>opensimrt_bridge</name>
   <version>0.0.1</version>
-  <description>The opensimrt_bridge package</description>
+  <description>opensimrt_bridge creates topics from .sto .mot and .trc files to be used in conjunction with opensimrt. </description>
 
   <maintainer email="frekle@kth.se">Frederico Klein</maintainer>
   <license>MIT</license>
