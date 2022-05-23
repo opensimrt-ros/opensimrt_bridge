@@ -42,6 +42,17 @@ target_link_libraries(id_dump
   ${opensimrt_LIBRARIES}
 )
 
+add_executable(grf_dump src/grf_mot_file_dumper.cpp)
+
+add_dependencies(grf_dump ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(grf_dump
+  ${catkin_LIBRARIES}
+  ${OpenSim_LIBRARIES}
+  ${opensimrt_LIBRARIES}
+)
+
+
 add_executable(${PROJECT_NAME}_node src/bridge.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
