@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<launch>
+
+	<arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" />
+
+        <node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
+		<param name="grf_mot_file" 			value="$(arg grf_mot_file)" />
+		<param name="grf_right_apply_to_body"		value="calcn_r"/>
+		<param name="grf_right_force_expressed_in_body"	value="ground"/>
+		<param name="grf_right_point_expressed_in_body"	value="ground"/>
+		<param name="grf_left_apply_to_body"		value="calcn_l"/>
+		<param name="grf_left_force_expressed_in_body"	value="ground"/>
+		<param name="grf_left_point_expressed_in_body"	value="ground"/>
+		<!-- these are prefixes for the table -->
+		<param name="grf_right_point_identifier"	value="ground_force_p"/>
+		<param name="grf_right_force_identifier"	value="ground_force_v"/>
+		<param name="grf_right_torque_identifier"	value="ground_torque_"/>
+		<param name="grf_left_point_identifier"		value="1_ground_force_p"/>
+		<param name="grf_left_force_identifier"		value="1_ground_force_v"/>
+		<param name="grf_left_torque_identifier"	value="1_ground_torque_"/>
+		
+		<!-- filter parameters -->
+		
+		<param name="use_filter"	value="false"/>
+		<param name="memory"		value="35"/>
+		<param name="cutoff_freq"	value="6"/>
+		<param name="delay"		value="14"/>
+		<param name="spline_order"	value="3"/>
+
+        </node>
+
+</launch>
