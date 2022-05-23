@@ -7,8 +7,8 @@
         <node pkg="opensimrt_bridge" type="ik_dump" 	name="inverse_kinematics_from_file" >
 		<param name="ik_file" 			value="$(arg ik_file)" />
                 <param name="model_file" 		value="$(arg model_file)" />
-                <param name="remove_n_last_rows" 	value="5" />
-                <param name="simulation_loops" 		value="20" />
+                <param name="remove_n_last_rows" 	value="0" />
+                <param name="simulation_loops" 		value="1" />
                 <param name="resample_period" 		value="0.01" />
         </node>
 
