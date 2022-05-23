@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(opensimrt_bridge)
 
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
 add_compile_options(-std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -18,6 +20,16 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(ik_dump src/ik_file_dumper.cpp)
+
+add_dependencies(ik_dump ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(ik_dump
+  ${catkin_LIBRARIES}
+  ${OpenSim_LIBRARIES}
+  ${opensimrt_LIBRARIES}
 )
 
 add_executable(${PROJECT_NAME}_node src/bridge.cpp)
