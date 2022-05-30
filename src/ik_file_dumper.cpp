@@ -3,16 +3,34 @@
 #include <Actuators/Thelen2003Muscle.h>
 #include <Common/TimeSeriesTable.h>
 #include <OpenSim/Common/STOFileAdapter.h>
+#include "ros/init.h"
+#include "ros/rate.h"
 #include "ros/ros.h"
 #include "opensimrt_msgs/CommonTimed.h"
-#include "opensimrt_msgs/Labels.h"
+#include "opensimrt_msgs/LabelsSrv.h"
+#include "ros/service_server.h"
 #include "std_msgs/Header.h"
+#include "std_srvs/Empty.h"
+#include "std_srvs/EmptyRequest.h"
+#include "std_srvs/EmptyResponse.h"
 #include <cstdlib>
 
 using namespace std;
 using namespace OpenSim;
 using namespace SimTK;
 using namespace OpenSimRT;
+std::vector<std::string> labels;
+
+bool pudlished=false;
+
+bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res )
+{
+	res.data = labels;
+	pudlished = true;
+	ROS_INFO_STREAM("CALLED LABELS SRV");
+	return true;
+}
+
 
 void run() {
     // subject data
@@ -49,16 +67,25 @@ void run() {
 
     ros::NodeHandle n;
     ros::Publisher re_pub = n.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
-    ros::Publisher labels_pub = n.advertise<opensimrt_msgs::Labels>("r_labels", 1000, true); //latching topic
-
-    std::vector<std::string> labels = qTable.getColumnLabels();
-    opensimrt_msgs::Labels l_msg;
+    //ros::Publisher labels_pub = n.advertise<opensimrt_msgs::Labels>("r_labels", 1000, true); //latching topic
+    ros::ServiceServer gets_labels = n.advertiseService("gets_labels", update_labels);
+    ros::Rate r(1);
+    labels = qTable.getColumnLabels();
+    while(!pudlished)
+    {
+	ros::spinOnce();
+	r.sleep();
+   	ROS_INFO_STREAM("stuck"); 
+    }
+   
+    // this is wrong.
+    /*opensimrt_msgs::Labels l_msg;
     l_msg.data = labels;
     std_msgs::Header h;
     h.stamp = ros::Time::now();
     h.frame_id = "subject";
     l_msg.header = h;	
-    labels_pub.publish(l_msg); 
+    labels_pub.publish(l_msg); */
     //ros::spinOnce();
     
     ros::Rate rate(1/resample_period);

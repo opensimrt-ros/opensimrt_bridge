@@ -42,6 +42,16 @@ target_link_libraries(id_dump
   ${opensimrt_LIBRARIES}
 )
 
+add_executable(saver src/ik_saver.cpp)
+
+add_dependencies(saver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(saver
+  ${catkin_LIBRARIES}
+  ${OpenSim_LIBRARIES}
+  ${opensimrt_LIBRARIES}
+)
+
 add_executable(grf_dump src/grf_mot_file_dumper.cpp)
 
 add_dependencies(grf_dump ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

@@ -8,7 +8,7 @@
 		<param name="ik_file" 			value="$(arg ik_file)" />
                 <param name="model_file" 		value="$(arg model_file)" />
                 <param name="remove_n_last_rows" 	value="0" />
-                <param name="simulation_loops" 		value="1" />
+                <param name="simulation_loops" 		value="3" />
                 <param name="resample_period" 		value="0.01" />
         </node>
 
