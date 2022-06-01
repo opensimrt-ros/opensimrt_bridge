@@ -66,9 +66,9 @@ void run() {
         qTable.removeRow(qTable.getIndependentColumn().back());
 
     ros::NodeHandle n;
-    ros::Publisher re_pub = n.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
+    ros::Publisher re_pub = nh.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
     //ros::Publisher labels_pub = n.advertise<opensimrt_msgs::Labels>("r_labels", 1000, true); //latching topic
-    ros::ServiceServer gets_labels = n.advertiseService("gets_labels", update_labels);
+    ros::ServiceServer gets_labels = nh.advertiseService("out_labels", update_labels);
     ros::Rate r(1);
     labels = qTable.getColumnLabels();
     while(!pudlished)
