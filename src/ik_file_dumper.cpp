@@ -22,6 +22,7 @@ using namespace OpenSimRT;
 std::vector<std::string> labels;
 
 bool pudlished=false;
+bool start=false;
 
 bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res )
 {
@@ -31,6 +32,12 @@ bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::Lab
 	return true;
 }
 
+bool start_me(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
+{
+	start = true;
+	return true;
+
+}
 
 void run() {
     // subject data
@@ -67,11 +74,13 @@ void run() {
 
     ros::NodeHandle n;
     ros::Publisher re_pub = nh.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
+    ros::Publisher re_pub2 = nh.advertise<opensimrt_msgs::CommonTimed>("r_data2", 1000);
     //ros::Publisher labels_pub = n.advertise<opensimrt_msgs::Labels>("r_labels", 1000, true); //latching topic
     ros::ServiceServer gets_labels = nh.advertiseService("out_labels", update_labels);
+    ros::ServiceServer start_publishing = nh.advertiseService("start", start_me);
     ros::Rate r(1);
     labels = qTable.getColumnLabels();
-    while(!pudlished)
+    while(!(pudlished && start))
     {
 	ros::spinOnce();
 	r.sleep();
@@ -139,7 +148,8 @@ void run() {
 		h.stamp = frameTime;
 		msg.header = h;
 		re_pub.publish(msg);
-
+		re_pub2.publish(msg);
+		ros::spinOnce();
 		rate.sleep();
 	    }
     }
