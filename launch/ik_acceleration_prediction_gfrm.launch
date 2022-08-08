@@ -11,7 +11,7 @@
                 <param name="simulation_loops" 		value="3" />
                 <param name="resample_period" 		value="0.01" />
 		<!-- maybe you want to run this node slower than the resampling period to give a lot of time between messages for the other algorithms to run. Otherwise this number should be one -->
-		<param name="rate_multiplier" 		value="10" />
+		<param name="rate_divider" 		value="10" />
         </node>
 
 </launch>

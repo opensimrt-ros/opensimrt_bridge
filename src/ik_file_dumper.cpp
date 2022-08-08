@@ -31,7 +31,7 @@ class TablePublisher
 		int simulation_loops, executed_loops = 0;
 		double resample_period;
 		ros::Rate *rate;
-		double rate_multiplier;
+		double rate_divider;
 		double time_error_threshold; // in seconds
 		ros::Publisher re_pub, re_pub2;
 		ros::ServiceServer gets_labels;
@@ -51,7 +51,7 @@ class TablePublisher
 		    //cheat
 		    nh.param<double>("resample_period", resample_period, 0.01);
 		 
-		    nh.param<double>("rate_multiplier", rate_multiplier, 1);
+		    nh.param<double>("rate_divider", rate_divider, 1);
 		    // setup model
 		    Object::RegisterType(Thelen2003Muscle());
 		    Model model(model_file);
@@ -85,7 +85,7 @@ class TablePublisher
 		    l_msg.header = h;	
 		    labels_pub.publish(l_msg); */
 		    //ros::spinOnce();
-		    double rate_frequency = 1/rate_multiplier/resample_period;
+		    double rate_frequency = 1/rate_divider/resample_period;
 		    ROS_INFO_STREAM("Rate rate_frequency set to: "<< rate_frequency);
 		    //ros::Rate rate(rate_frequency);
 		    rate = new ros::Rate(rate_frequency);
@@ -160,7 +160,7 @@ class TablePublisher
 
 					h.frame_id = "subject";
 					ros::Time frameTime = ros::Time::now();
-					double time_difference = (frameTime.toSec() - initial_time)/rate_multiplier;
+					double time_difference = (frameTime.toSec() - initial_time)/rate_divider;
 					if ( std::abs(time_difference - t) > time_error_threshold )
 					{
 						
