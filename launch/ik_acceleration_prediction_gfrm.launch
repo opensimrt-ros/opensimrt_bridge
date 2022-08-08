@@ -4,12 +4,14 @@
 	<arg name="ik_file" 	default="/srv/data/gait1992/inverse_kinematics/task_InverseKinematics.mot" />
 	<arg name="model_file" 	default="/srv/data/gait1992/residual_reduction_algorithm/model_adjusted.osim" />
 
-        <node pkg="opensimrt_bridge" type="ik_dump" 	name="inverse_kinematics_from_file" >
+        <node pkg="opensimrt_bridge" type="ik_dump" 	name="inverse_kinematics_from_file" output="screen">
 		<param name="ik_file" 			value="$(arg ik_file)" />
                 <param name="model_file" 		value="$(arg model_file)" />
                 <param name="remove_n_last_rows" 	value="0" />
                 <param name="simulation_loops" 		value="3" />
                 <param name="resample_period" 		value="0.01" />
+		<!-- maybe you want to run this node slower than the resampling period to give a lot of time between messages for the other algorithms to run. Otherwise this number should be one -->
+		<param name="rate_multiplier" 		value="10" />
         </node>
 
 </launch>

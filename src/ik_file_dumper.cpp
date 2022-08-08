@@ -57,6 +57,9 @@ void run() {
     //cheat
     double resample_period;
     nh.param<double>("resample_period", resample_period, 0.01);
+ 
+    double rate_multiplier;
+    nh.param<double>("rate_multiplier", rate_multiplier, 1);
     // setup model
     Object::RegisterType(Thelen2003Muscle());
     Model model(model_file);
@@ -96,8 +99,9 @@ void run() {
     l_msg.header = h;	
     labels_pub.publish(l_msg); */
     //ros::spinOnce();
-    
-    ros::Rate rate(1/resample_period);
+    double rate_frequency = 1/rate_multiplier/resample_period;
+    ROS_INFO_STREAM("Rate rate_frequency set to: "<< rate_frequency);
+    ros::Rate rate(rate_frequency);
     // repeat the simulation `simulationLoops` times
     int simulationLimit = qTable.getNumRows() * simulation_loops;
 
@@ -111,46 +115,49 @@ void run() {
 	    double time_offset = j * (qTable.getIndependentColumn().back()+resample_period); // we need resample period or 
 	    ROS_INFO_STREAM("Time offset:" << time_offset );
 	    for (int i = 0; i < qTable.getNumRows(); i++) {
-		// get raw pose from table
-		ROS_DEBUG("Get raw pose from table");
-		auto qqqqq = qTable.getRowAtIndex(i);
-		opensimrt_msgs::CommonTimed msg;
-		std_msgs::Header h;
-		
-		double t = qTable.getIndependentColumn()[i] + time_offset;
+
+			// get raw pose from table
+			ROS_DEBUG("Get raw pose from table");
+			auto qqqqq = qTable.getRowAtIndex(i);
+			opensimrt_msgs::CommonTimed msg;
+			std_msgs::Header h;
 			
-		//msg.data.push_back(t);
-		msg.time = t;
+			double t = qTable.getIndependentColumn()[i] + time_offset;
+				
+			//msg.data.push_back(t);
+			msg.time = t;
 
-		for (auto ele: qqqqq)
-		{
-			ROS_DEBUG_STREAM("Element: " << ele);
-			msg.data.push_back(ele);
-		}
-		ROS_DEBUG("finished reading table row into msg.");
+			for (auto ele: qqqqq)
+			{
+				ROS_DEBUG_STREAM("Element: " << ele);
+				msg.data.push_back(ele);
+			}
+			ROS_DEBUG("finished reading table row into msg.");
 
 
-    		//labels_pub.publish(l_msg); 
+			//labels_pub.publish(l_msg); 
 
 
-		//auto qRaw = qTable.getRowAtIndex(i).getAsVector();
-		//ROS_DEBUG("DD");
+			//auto qRaw = qTable.getRowAtIndex(i).getAsVector();
+			//ROS_DEBUG("DD");
 
-		h.frame_id = "subject";
-		ros::Time frameTime = ros::Time::now();
-		double time_difference = frameTime.toSec() - initial_time;
-		if ( std::abs(time_difference - t) > time_error_threshold )
-		{
-			
-			ROS_WARN_STREAM("time difference" << time_difference -t << " exceeds threshold: " << time_error_threshold);
-			ROS_INFO_STREAM("Frame time - initial_time " << time_difference << " Simulation time" << t );
-		}
-		h.stamp = frameTime;
-		msg.header = h;
-		re_pub.publish(msg);
-		re_pub2.publish(msg);
-		ros::spinOnce();
-		rate.sleep();
+			h.frame_id = "subject";
+			ros::Time frameTime = ros::Time::now();
+			double time_difference = (frameTime.toSec() - initial_time)/rate_multiplier;
+			if ( std::abs(time_difference - t) > time_error_threshold )
+			{
+				
+				ROS_WARN_STREAM("time difference" << time_difference -t << " exceeds threshold: " << time_error_threshold);
+				ROS_INFO_STREAM("Frame time - initial_time " << time_difference << " Simulation time" << t );
+			}
+			h.stamp = frameTime;
+			msg.header = h;
+			re_pub.publish(msg);
+			re_pub2.publish(msg);
+			ros::spinOnce();
+			if (!ros::ok())
+				return;
+			rate.sleep();
 	    }
     }
 
