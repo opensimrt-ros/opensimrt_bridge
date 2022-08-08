@@ -27,6 +27,7 @@ class TablePublisher
 	public:
 		std::vector<std::string> labels;
 		bool pudlished=false;
+		bool first_run=true;
 		TimeSeriesTable qTable;
 		int simulation_loops, executed_loops = 0;
 		double resample_period;
@@ -35,6 +36,7 @@ class TablePublisher
 		double time_error_threshold; // in seconds
 		ros::Publisher re_pub, re_pub2;
 		ros::ServiceServer gets_labels;
+		double initial_time;
 		TablePublisher()
 		{
 		    ros::NodeHandle nh("~");
@@ -126,9 +128,9 @@ class TablePublisher
 			r.sleep();
 			ROS_INFO_STREAM("stuck"); 
 		    }
-		    double initial_time = ros::Time::now().toSec();
 
 		    for (int j = executed_loops; j < simulation_loops + executed_loops; j++) {
+		    	    initial_time = ros::Time::now().toSec();
 			    double time_offset = j * (qTable.getIndependentColumn().back()+resample_period); // we need resample period or 
 			    ROS_INFO_STREAM("Time offset:" << time_offset );
 			    for (int i = 0; i < qTable.getNumRows(); i++) {
@@ -160,9 +162,10 @@ class TablePublisher
 
 					h.frame_id = "subject";
 					ros::Time frameTime = ros::Time::now();
-					double time_difference = (frameTime.toSec() - initial_time)/rate_divider;
+					double time_difference = (frameTime.toSec() - initial_time )/rate_divider + time_offset;
 					if ( std::abs(time_difference - t) > time_error_threshold )
 					{
+			    			ROS_INFO_STREAM("Time offset:" << time_offset );
 						
 						ROS_WARN_STREAM("time difference" << time_difference -t << " exceeds threshold: " << time_error_threshold);
 						ROS_INFO_STREAM("Frame time - initial_time " << time_difference << " Simulation time" << t );
@@ -178,6 +181,7 @@ class TablePublisher
 			    }
 		    }
 		    executed_loops += simulation_loops;
+		    
 		}
 };
 
