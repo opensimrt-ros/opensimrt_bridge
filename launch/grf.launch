@@ -26,6 +26,10 @@
 		<param name="cutoff_freq"	value="6"/>
 		<param name="delay"		value="14"/>
 		<param name="spline_order"	value="3"/>
+		<remap from="/r_data" to="/ik/output"/>
+		<remap from="/grf_both" to="/grf_node/output"/>
+		<remap from="/grf_from_file/out_labels" to="/grf_node/out_labels"/>
+
 
         </node>
 

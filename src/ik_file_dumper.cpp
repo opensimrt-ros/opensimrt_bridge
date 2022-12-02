@@ -144,7 +144,9 @@ class TablePublisher
 					double t = qTable.getIndependentColumn()[i] + time_offset;
 						
 					//msg.data.push_back(t);
+					// Possibly breaking change!!!!! I will make t the table time, instead of simulation time. Because it loops and then when trying to get the accurate grf from the table, I don't knwo what it the offset time. if things break, change common message to include the offset as well and then remove this offset in grf_mot_file_dumper from opensimrt_bridge to get the same results.
 					msg.time = t;
+					msg.offsettime = time_offset;
 
 					for (auto ele: qqqqq)
 					{
@@ -178,6 +180,8 @@ class TablePublisher
 					if (!ros::ok())
 						return;
 					rate->sleep();
+					// will execute only once!
+					//return;
 			    }
 		    }
 		    executed_loops += simulation_loops;
