@@ -9,18 +9,24 @@ find_package(catkin REQUIRED COMPONENTS
   opensimrt
   opensimrt_msgs
   roscpp
+  tf2
+  tf2_ros
 )
 
 find_package(OpenSim REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS opensimrt_msgs roscpp
+  tf2
+  tf2_ros
 )
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
+
+#add_library(osb ) ##maybe make it header only and avoid this
 
 add_executable(ik_dump src/ik_file_dumper.cpp)
 

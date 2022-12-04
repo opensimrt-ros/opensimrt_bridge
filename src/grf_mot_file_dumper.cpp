@@ -4,6 +4,7 @@
 #include <Actuators/Thelen2003Muscle.h>
 #include <Common/TimeSeriesTable.h>
 #include <OpenSim/Common/STOFileAdapter.h>
+#include "geometry_msgs/Point.h"
 #include "geometry_msgs/Vector3.h"
 #include "geometry_msgs/Wrench.h"
 #include "geometry_msgs/WrenchStamped.h"
@@ -20,41 +21,19 @@
 #include "std_msgs/Header.h"
 #include <SimTKcommon/SmallMatrix.h>
 #include <cstdlib>
-
+#include <opensimrt_bridge/conversions.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 
 using namespace std;
 using namespace OpenSim;
 using namespace SimTK;
 using namespace OpenSimRT;
-
+using namespace Osb;
 
 //TODO: maybe think about making ik_file_dumper a base class instead of copy-pasting everything
 
 //! oh, yeah, this guy.
-	template <class T>
-T get_as(const SimTK::Vec3& v)
-{
-	//geometry_msgs::Vector3 outvec;
-	T outvec;
-	outvec.x = v[0];
-	outvec.y = v[1];
-	outvec.z = v[2];
-	return outvec;
-}
-
-//gotta love conversions
-vector<string> conv_labels(Array<string> arg)
-{
-	vector<string> out;
-	for (int i=0;i<arg.size();i++)
-	{
-		string hello =arg.get(i);
-		cout << hello << " "<< endl;
-		out.push_back(arg.get(i));
-	};
-	return out;
-}
-
 class Gfrm
 {
 	//some important variables should be here
@@ -69,6 +48,7 @@ class Gfrm
 	ros::Publisher common_pub;
 	ros::ServiceServer gets_labels;
 	ros::Subscriber sub; // = nh.subscribe<opensimrt_msgs::CommonTimed>("r_data", 1, grfm);
+	tf2_ros::TransformBroadcaster br;
 
 	public:
 	Gfrm()
@@ -119,9 +99,9 @@ class Gfrm
 
 		// setup external forces
 		grfMotion = new Storage(grf_mot_file);
-		
+
 		gets_labels = nh.advertiseService("out_labels", &Gfrm::update_labels, this);
-		
+
 		auto labels_ = grfMotion->getColumnLabels();
 		labels = conv_labels(labels_); // am I messing the order here?
 
@@ -174,8 +154,9 @@ class Gfrm
 		//double t = qTable.getIndependentColumn()[i] + time_offset;
 		opensimrt_msgs::PointWrenchTimed msg;	
 
-		msg.wrench.force = get_as<geometry_msgs::Vector3>(wrench.force);
-		msg.wrench.torque = get_as<geometry_msgs::Vector3>(wrench.torque);
+		//msg.wrench.force = get_as<geometry_msgs::Vector3>(wrench.force);
+		//msg.wrench.torque = get_as<geometry_msgs::Vector3>(wrench.torque);
+		msg.wrench = get_as_ros_wrench<ExternalWrench::Input>(wrench);
 		msg.point = get_as<geometry_msgs::Point>(wrench.point);
 
 		msg.time = t;
@@ -184,18 +165,32 @@ class Gfrm
 		msg.header = h;
 		pub.publish(msg);
 	}
-	
+
 	void pub_wrench(const ros::Publisher& pub, const ExternalWrench::Input& wrench, const std_msgs::Header h)
 	{
 		//double t = qTable.getIndependentColumn()[i] + time_offset;
 		geometry_msgs::WrenchStamped w;
 
-		w.wrench.force = get_as<geometry_msgs::Vector3>(wrench.force);
-		w.wrench.torque = get_as<geometry_msgs::Vector3>(wrench.torque);
+		//w.wrench.force = get_as<geometry_msgs::Vector3>(wrench.force);
+		//w.wrench.torque = get_as<geometry_msgs::Vector3>(wrench.torque);
+		w.wrench = get_as_ros_wrench(wrench);
 
 		ROS_DEBUG("created Wrench msg ok.");
 		w.header = h;
 		pub.publish(w);
+	}
+
+	void pub_tf(string parent_frame_id, string child_frame_id, ExternalWrench::Input& wrench, const std_msgs::Header h)
+	{
+		geometry_msgs::TransformStamped transformStamped;
+		transformStamped.header = h;
+		transformStamped.header.frame_id = parent_frame_id;
+		transformStamped.child_frame_id = child_frame_id;
+		transformStamped.transform.translation = get_as<geometry_msgs::Vector3>(wrench.point);
+		transformStamped.transform.rotation = TO_ROS_G;
+
+		br.sendTransform(transformStamped);
+
 	}
 
 	opensimrt_msgs::CommonTimed get_GRFMs_as_common_msg(ExternalWrench::Input grfmRight, ExternalWrench::Input grfmLeft, double t, std_msgs::Header h)
@@ -229,13 +224,13 @@ class Gfrm
 		return msg;
 	}
 
-		bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res )
-		{
-			res.data = labels;
-			//pudlished = true;
-			ROS_INFO_STREAM("CALLED LABELS SRV");
-			return true;
-		}
+	bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res )
+	{
+		res.data = labels;
+		//pudlished = true;
+		ROS_INFO_STREAM("CALLED LABELS SRV");
+		return true;
+	}
 
 
 	void pub_both_wrenches(double t, double offsettime, std_msgs::Header h)
@@ -262,16 +257,21 @@ class Gfrm
 		}
 
 		//std_msgs::Header h;
-		h.frame_id = "subject";
 		// I also need to publish the correct frame transformations!!!
 		//ros::Time frameTime = ros::Time::now();
 		//h.stamp = frameTime;
 
+		h.frame_id = "right_foot_forceplate";
 		pub_wrench_combined(r_pub, grfRightWrench,t, h);
+		pub_wrench(rw_pub, grfRightWrench, h);
+		pub_tf("map",h.frame_id,grfRightWrench,h);
+		h.frame_id = "left_foot_forceplate";
 		pub_wrench_combined(l_pub, grfLeftWrench,t, h);
 		pub_wrench(lw_pub, grfLeftWrench, h);
-		pub_wrench(rw_pub, grfRightWrench, h);
+		pub_tf("map",h.frame_id,grfLeftWrench,h);
+		h.frame_id = "subject";
 		common_pub.publish(get_GRFMs_as_common_msg(grfRightWrench,grfLeftWrench,t,h));
+		// now publish the tfs
 	}
 	void callback(const opensimrt_msgs::CommonTimedConstPtr& message){
 
