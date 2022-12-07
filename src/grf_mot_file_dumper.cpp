@@ -41,7 +41,7 @@ class Gfrm: public Ros::CommonNode
 	LowPassSmoothFilter* grfRightFilter, *grfLeftFilter;
 	Storage* grfMotion;
 	bool use_filter;
-	vector<string> grfRightLabels, grfLeftLabels, labels; 
+	vector<string> grfRightLabels, grfLeftLabels; 
 	//publishers
 	ros::Publisher r_pub, l_pub;	
 	ros::Publisher rw_pub, lw_pub;	
@@ -100,7 +100,8 @@ class Gfrm: public Ros::CommonNode
 		grfMotion = new Storage(grf_mot_file);
 
 		auto labels_ = grfMotion->getColumnLabels();
-		labels = conv_labels(labels_); // am I messing the order here?
+		output_labels = conv_labels(labels_); // am I messing the order here?
+					       
 
 		ExternalWrench::Parameters grfRightFootPar{
 			grfRightApplyBody, grfRightForceExpressed, grfRightPointExpressed};
@@ -147,9 +148,12 @@ class Gfrm: public Ros::CommonNode
 	}
 	void onInit()
 	{
-		Ros::CommonNode::onInit();
 		output.desired_label_order = {"ground_force_px","ground_force_py","ground_force_pz","ground_force_vx","ground_force_vy","ground_force_vz","ground_torque_x","ground_torque_y","ground_torque_z","1_ground_force_px","1_ground_force_py","1_ground_force_pz","1_ground_force_vx","1_ground_force_vy","1_ground_force_vz","1_ground_torque_x","1_ground_torque_y","1_ground_torque_z"};
-		output.set(labels); // important is that this is done after I read the tableseries so that I have the columnnames set on the labels variable 	
+		output.set(output_labels); // important is that this is done after I read the tableseries so that I have the columnnames set on the labels variable 	
+		output_labels = output.desired_label_order;
+		//since now I will have the correct output order, I need to make sure when someone asks me for the labels that I say the corrected order. 
+		//alright, I remembered the code wrong. we actually unpack the table into a grfm type and pack it again, it was saying the wrong order, but the order it was publishing was correct all along. 
+		Ros::CommonNode::onInit();
 	}
 	void pub_wrench_combined(const ros::Publisher& pub, const ExternalWrench::Input& wrench, double t, const std_msgs::Header h)
 	{
