@@ -27,6 +27,7 @@ include_directories(
 )
 
 #add_library(osb ) ##maybe make it header only and avoid this
+message(STATUS "opensimrt libraries := ${opensimrt_LIBRARIES}")
 
 add_executable(ik_dump src/ik_file_dumper.cpp)
 

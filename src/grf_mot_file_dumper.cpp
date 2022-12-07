@@ -24,6 +24,7 @@
 #include <opensimrt_bridge/conversions.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include "Ros/include/common_node.h"
 
 using namespace std;
 using namespace OpenSim;
@@ -34,7 +35,7 @@ using namespace Osb;
 //TODO: maybe think about making ik_file_dumper a base class instead of copy-pasting everything
 
 //! oh, yeah, this guy.
-class Gfrm
+class Gfrm: public Ros::CommonNode
 {
 	//some important variables should be here
 	LowPassSmoothFilter* grfRightFilter, *grfLeftFilter;
@@ -46,8 +47,6 @@ class Gfrm
 	ros::Publisher rw_pub, lw_pub;	
 	ros::Publisher rp_pub, lp_pub;	
 	ros::Publisher common_pub;
-	ros::ServiceServer gets_labels;
-	ros::Subscriber sub; // = nh.subscribe<opensimrt_msgs::CommonTimed>("r_data", 1, grfm);
 	tf2_ros::TransformBroadcaster br;
 
 	public:
@@ -100,8 +99,6 @@ class Gfrm
 		// setup external forces
 		grfMotion = new Storage(grf_mot_file);
 
-		gets_labels = nh.advertiseService("out_labels", &Gfrm::update_labels, this);
-
 		auto labels_ = grfMotion->getColumnLabels();
 		labels = conv_labels(labels_); // am I messing the order here?
 
@@ -134,7 +131,6 @@ class Gfrm
 		grfLeftFilter = new LowPassSmoothFilter (grfFilterParam);
 
 		ros::NodeHandle n;
-		sub = n.subscribe<opensimrt_msgs::CommonTimed>("r_data", 1, &Gfrm::callback, this);
 		l_pub = n.advertise<opensimrt_msgs::PointWrenchTimed>("grf_left/wrench_point", 1000);
 		r_pub = n.advertise<opensimrt_msgs::PointWrenchTimed>("grf_right/wrench_point", 1000);
 
@@ -148,6 +144,12 @@ class Gfrm
 
 		double initial_time = ros::Time::now().toSec();
 
+	}
+	void onInit()
+	{
+		Ros::CommonNode::onInit();
+		output.desired_label_order = {"ground_force_px","ground_force_py","ground_force_pz","ground_force_vx","ground_force_vy","ground_force_vz","ground_torque_x","ground_torque_y","ground_torque_z","1_ground_force_px","1_ground_force_py","1_ground_force_pz","1_ground_force_vx","1_ground_force_vy","1_ground_force_vz","1_ground_torque_x","1_ground_torque_y","1_ground_torque_z"};
+		output.set(labels); // important is that this is done after I read the tableseries so that I have the columnnames set on the labels variable 	
 	}
 	void pub_wrench_combined(const ros::Publisher& pub, const ExternalWrench::Input& wrench, double t, const std_msgs::Header h)
 	{
@@ -193,7 +195,7 @@ class Gfrm
 
 	}
 
-	opensimrt_msgs::CommonTimed get_GRFMs_as_common_msg(ExternalWrench::Input grfmRight, ExternalWrench::Input grfmLeft, double t, std_msgs::Header h)
+	opensimrt_msgs::CommonTimed get_GRFMs_as_common_msg(ExternalWrench::Input grfmRight, ExternalWrench::Input grfmLeft, double t, double offsettime, std_msgs::Header h)
 	{
 		//TODO: NO LABELS FOR ORDER??
 		//
@@ -220,18 +222,10 @@ class Gfrm
 			msg.header = h; //will this break? it will be publishing messages in the past
 		}
 		msg.time = t;
+		msg.offsettime = offsettime;
 		msg.data.insert(msg.data.end(), p.begin(),p.end());
 		return msg;
 	}
-
-	bool update_labels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res )
-	{
-		res.data = labels;
-		//pudlished = true;
-		ROS_INFO_STREAM("CALLED LABELS SRV");
-		return true;
-	}
-
 
 	void pub_both_wrenches(double t, double offsettime, std_msgs::Header h)
 	{
@@ -270,7 +264,7 @@ class Gfrm
 		pub_wrench(lw_pub, grfLeftWrench, h);
 		pub_tf("map",h.frame_id,grfLeftWrench,h);
 		h.frame_id = "subject";
-		common_pub.publish(get_GRFMs_as_common_msg(grfRightWrench,grfLeftWrench,t,h));
+		common_pub.publish(get_GRFMs_as_common_msg(grfRightWrench,grfLeftWrench,t, offsettime,h));
 		// now publish the tfs
 	}
 	void callback(const opensimrt_msgs::CommonTimedConstPtr& message){
@@ -279,6 +273,7 @@ class Gfrm
 		//LOOP needs to be implemented like functor
 		double t = message->time;
 		double offsettime = message->offsettime;
+		ROS_INFO_STREAM("am I getting the offset?"<< offsettime);
 		pub_both_wrenches(t, offsettime, message->header);
 	}
 };
@@ -289,7 +284,7 @@ int main(int argc, char** argv) {
 		ROS_INFO_STREAM("Starting GRFM node");
 		//this is completely wrong. I should be able to just play it. but then how do I know that these things are synchronized?
 		Gfrm grfm;
-		ros::ServiceServer start_publishing = nh.advertiseService("update_labels", &Gfrm::update_labels, &grfm);
+		grfm.onInit();
 		ros::spin();
 	} 
 	catch ( ros::Exception &e ) {
