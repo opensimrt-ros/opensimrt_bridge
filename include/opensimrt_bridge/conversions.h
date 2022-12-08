@@ -10,7 +10,11 @@
 namespace Osb
 {
 	const tf2::Quaternion TO_ROS{0,0.707,0.707,0};
+	const tf2::Quaternion Trial_and_error{0.5,0.5,0.5,0.5};
+	const tf2::Quaternion EYE{0,0,0,1};
 	const geometry_msgs::Quaternion TO_ROS_G = tf2::toMsg(TO_ROS);
+	const geometry_msgs::Quaternion Trial_and_error_G = tf2::toMsg(Trial_and_error);
+	const geometry_msgs::Quaternion EYE_G = tf2::toMsg(EYE);
 
 	template <class T>
 		T get_as(const SimTK::Vec3& v)
@@ -20,6 +24,16 @@ namespace Osb
 			outvec.x = v[0];
 			outvec.y = v[1];
 			outvec.z = v[2];
+			return outvec;
+		};
+	template <class T>
+		T get_as_different(const SimTK::Vec3& v)
+		{
+			//geometry_msgs::Vector3 outvec;
+			T outvec;
+			outvec.x = -v[1];
+			outvec.y = -v[2];
+			outvec.z = v[0];
 			return outvec;
 		};
 

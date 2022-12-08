@@ -3,7 +3,7 @@
 
 	<arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" />
 
-        <node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
+	<node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
 		<param name="grf_mot_file" 			value="$(arg grf_mot_file)" />
 		<param name="grf_right_apply_to_body"		value="calcn_r"/>
 		<param name="grf_right_force_expressed_in_body"	value="ground"/>
@@ -18,20 +18,27 @@
 		<param name="grf_left_point_identifier"		value="1_ground_force_p"/>
 		<param name="grf_left_force_identifier"		value="1_ground_force_v"/>
 		<param name="grf_left_torque_identifier"	value="1_ground_torque_"/>
-		
+
 		<!-- filter parameters -->
-		
+
 		<param name="use_filter"	value="false"/>
 		<param name="memory"		value="35"/>
 		<param name="cutoff_freq"	value="6"/>
 		<param name="delay"		value="14"/>
 		<param name="spline_order"	value="3"/>
+
+		<param name="publish_tf"	value="true" />
+		<param name="tf_apply_rotation"	value="false"/>
+		<param name="tf_right_foot_frame"	value="right_foot_forceplate"/>
+		<param name="tf_left_foot_frame"	value="left_foot_forceplate"/>
+		<param name="tf_ref_frame"	value="map"/>
+
 		<remap from="/grf_from_file/input" 	to="/ik/output"/>
 		<remap from="/in_labels" 		to="/ik/outlabels"/>
 		<remap from="/grf_both" 		to="/grf_node2/output"/>
 		<remap from="/grf_from_file/out_labels" to="/grf_node2/out_labels"/>
 
 
-        </node>
+	</node>
 
 </launch>

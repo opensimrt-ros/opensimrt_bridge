@@ -40,7 +40,7 @@ class Gfrm: public Ros::CommonNode
 	//some important variables should be here
 	LowPassSmoothFilter* grfRightFilter, *grfLeftFilter;
 	Storage* grfMotion;
-	bool use_filter;
+	bool use_filter, tf_apply_rotation, publish_tf;
 	vector<string> grfRightLabels, grfLeftLabels; 
 	//publishers
 	ros::Publisher r_pub, l_pub;	
@@ -48,6 +48,8 @@ class Gfrm: public Ros::CommonNode
 	ros::Publisher rp_pub, lp_pub;	
 	ros::Publisher common_pub;
 	tf2_ros::TransformBroadcaster br;
+
+	string tf_left_foot_frame, tf_right_foot_frame, tf_ref_frame;
 
 	public:
 	Gfrm()
@@ -84,6 +86,13 @@ class Gfrm: public Ros::CommonNode
 		nh.param<string>("grf_left_force_identifier", grfLeftForceIdentifier, "");
 		string grfLeftTorqueIdentifier;
 		nh.param<string>("grf_left_torque_identifier", grfLeftTorqueIdentifier, "");
+		
+
+		nh.param<bool>("tf_apply_rotation", tf_apply_rotation, true);
+		nh.param<bool>("publish_tf", publish_tf, true);
+		nh.param<string>("tf_left_foot_frame", tf_left_foot_frame, "left_foot_forceplate");
+		nh.param<string>("tf_right_foot_frame", tf_right_foot_frame, "right_foot_forceplate");
+		nh.param<string>("tf_ref_frame", tf_ref_frame, "map");
 
 		//Params for GFRM filter
 		nh.param<bool>("use_filter", use_filter, true);
@@ -193,8 +202,11 @@ class Gfrm: public Ros::CommonNode
 		transformStamped.header.frame_id = parent_frame_id;
 		transformStamped.child_frame_id = child_frame_id;
 		transformStamped.transform.translation = get_as<geometry_msgs::Vector3>(wrench.point);
-		transformStamped.transform.rotation = TO_ROS_G;
-
+		if (tf_apply_rotation)
+			transformStamped.transform.rotation = Trial_and_error_G;
+			//transformStamped.transform.rotation = TO_ROS_G;
+		else
+			transformStamped.transform.rotation = EYE_G; 
 		br.sendTransform(transformStamped);
 
 	}
@@ -259,14 +271,17 @@ class Gfrm: public Ros::CommonNode
 		//ros::Time frameTime = ros::Time::now();
 		//h.stamp = frameTime;
 
-		h.frame_id = "right_foot_forceplate";
+		h.frame_id = tf_right_foot_frame;
 		pub_wrench_combined(r_pub, grfRightWrench,t, h);
 		pub_wrench(rw_pub, grfRightWrench, h);
-		pub_tf("map",h.frame_id,grfRightWrench,h);
-		h.frame_id = "left_foot_forceplate";
+		h.frame_id = tf_left_foot_frame;
 		pub_wrench_combined(l_pub, grfLeftWrench,t, h);
 		pub_wrench(lw_pub, grfLeftWrench, h);
-		pub_tf("map",h.frame_id,grfLeftWrench,h);
+		if (publish_tf)
+		{
+			pub_tf(tf_ref_frame,tf_right_foot_frame,grfRightWrench,h);
+			pub_tf(tf_ref_frame,tf_left_foot_frame,grfLeftWrench,h);
+		}
 		h.frame_id = "subject";
 		common_pub.publish(get_GRFMs_as_common_msg(grfRightWrench,grfLeftWrench,t, offsettime,h));
 		// now publish the tfs
