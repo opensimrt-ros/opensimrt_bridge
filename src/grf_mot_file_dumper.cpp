@@ -247,7 +247,7 @@ class Gfrm: public Ros::CommonNode
 	{
 		// receives time:
 		// get grf forces
-		ROS_INFO_STREAM("T" << t);
+		ROS_DEBUG_STREAM("T:" << t);
 		auto grfRightWrench = ExternalWrench::getWrenchFromStorage(
 				t-offsettime, grfRightLabels, *grfMotion);
 		auto grfLeftWrench = ExternalWrench::getWrenchFromStorage(
@@ -279,6 +279,7 @@ class Gfrm: public Ros::CommonNode
 		pub_wrench(lw_pub, grfLeftWrench, h);
 		if (publish_tf)
 		{
+			ROS_DEBUG_STREAM("Publishing tfs: " << tf_right_foot_frame << " " << tf_left_foot_frame << " using reference frame:" << tf_ref_frame);
 			pub_tf(tf_ref_frame,tf_right_foot_frame,grfRightWrench,h);
 			pub_tf(tf_ref_frame,tf_left_foot_frame,grfLeftWrench,h);
 		}
@@ -292,7 +293,7 @@ class Gfrm: public Ros::CommonNode
 		//LOOP needs to be implemented like functor
 		double t = message->time;
 		double offsettime = message->offsettime;
-		ROS_INFO_STREAM("am I getting the offset?"<< offsettime);
+		ROS_DEBUG_STREAM("Am I getting the offset? "<< offsettime);
 		pub_both_wrenches(t, offsettime, message->header);
 	}
 };
