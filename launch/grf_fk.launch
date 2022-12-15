@@ -13,12 +13,12 @@
 		<param name="grf_left_force_expressed_in_body"	value="ground"/>
 		<param name="grf_left_point_expressed_in_body"	value="ground"/>
 		<!-- these are prefixes for the table -->
-		<param name="grf_right_point_identifier"	value="ground_force_p"/>
-		<param name="grf_right_force_identifier"	value="ground_force_v"/>
-		<param name="grf_right_torque_identifier"	value="ground_torque_"/>
-		<param name="grf_left_point_identifier"		value="1_ground_force_p"/>
-		<param name="grf_left_force_identifier"		value="1_ground_force_v"/>
-		<param name="grf_left_torque_identifier"	value="1_ground_torque_"/>
+		<param name="grf_right_point_identifier"	value="ground_force1_p"/>
+		<param name="grf_right_force_identifier"	value="ground_force1_v"/>
+		<param name="grf_right_torque_identifier"	value="ground_torque1_"/>
+		<param name="grf_left_point_identifier"		value="ground_force4_p"/>
+		<param name="grf_left_force_identifier"		value="ground_force4_v"/>
+		<param name="grf_left_torque_identifier"	value="ground_torque4_"/>
 
 		<!-- filter parameters -->
 

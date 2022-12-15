@@ -157,7 +157,8 @@ class Gfrm: public Ros::CommonNode
 	}
 	void onInit()
 	{
-		output.desired_label_order = {"ground_force_px","ground_force_py","ground_force_pz","ground_force_vx","ground_force_vy","ground_force_vz","ground_torque_x","ground_torque_y","ground_torque_z","1_ground_force_px","1_ground_force_py","1_ground_force_pz","1_ground_force_vx","1_ground_force_vy","1_ground_force_vz","1_ground_torque_x","1_ground_torque_y","1_ground_torque_z"};
+		//output.desired_label_order = {"ground_force_px","ground_force_py","ground_force_pz","ground_force_vx","ground_force_vy","ground_force_vz","ground_torque_x","ground_torque_y","ground_torque_z","1_ground_force_px","1_ground_force_py","1_ground_force_pz","1_ground_force_vx","1_ground_force_vy","1_ground_force_vz","1_ground_torque_x","1_ground_torque_y","1_ground_torque_z"};
+		output.desired_label_order = {"ground_force1_px","ground_force1_py","ground_force1_pz","ground_force1_vx","ground_force1_vy","ground_force1_vz","ground_torque1_x","ground_torque1_y","ground_torque1_z","ground_force4_px","ground_force4_py","ground_force4_pz","ground_force4_vx","ground_force4_vy","ground_force4_vz","ground_torque4_x","ground_torque4_y","ground_torque4_z"};
 		output.set(output_labels); // important is that this is done after I read the tableseries so that I have the columnnames set on the labels variable 	
 		output_labels = output.desired_label_order;
 		//since now I will have the correct output order, I need to make sure when someone asks me for the labels that I say the corrected order. 
