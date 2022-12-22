@@ -11,6 +11,7 @@
 #include "opensimrt_msgs/CommonTimed.h"
 #include "opensimrt_msgs/LabelsSrv.h"
 #include "ros/service_server.h"
+#include "ros/time.h"
 #include "std_msgs/Header.h"
 #include "std_srvs/Empty.h"
 #include "std_srvs/EmptyRequest.h"
@@ -39,6 +40,10 @@ class TablePublisher
 		ros::Publisher re_pub, re_pub2;
 		ros::ServiceServer gets_labels;
 		double initial_time = 0;
+		//uint32_t start_secs, start_nsecs;
+		//uint32_t stop_secs, stop_nsecs;
+		int start_secs, start_nsecs;
+		int stop_secs, stop_nsecs;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
@@ -51,6 +56,12 @@ class TablePublisher
 			// remove last N samples in motion for smooth transition between loops
 			int remove_n_last_rows;
 			nh.param<int>("remove_n_last_rows", remove_n_last_rows, 0);
+
+			nh.param<int>("start_at_secs", start_secs, 1668695814);
+			nh.param<int>("start_at_nsecs", start_nsecs, 643890142);
+			
+			nh.param<int>("stop_at_secs", stop_secs, 1668695818);
+			nh.param<int>("stop_at_nsecs", stop_nsecs, 643890142);
 
 			//cheat
 			nh.param<double>("resample_period", resample_period, 0.01);
@@ -115,6 +126,39 @@ class TablePublisher
 		bool start_me(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
 		{
 			run();
+			return true;
+
+		}
+		bool start_at(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
+		{
+			//This is severely untested stuff. it may work by coincidence alone
+			bool started = false;
+			while(ros::ok())
+			{
+				auto time_now = ros::Time::now();
+				if(time_now.sec>= start_secs && time_now.nsec >= start_nsecs)
+				{
+					ROS_INFO_STREAM_ONCE("started");
+					started = true;
+				}
+				if (time_now.sec >= stop_secs && time_now.nsec >= stop_nsecs)
+				{
+					ROS_INFO_STREAM_ONCE("stopped!");
+					i = 0;
+					started = false;
+				}
+				if (started)
+				{
+					publish_once();
+					ros::spinOnce();
+					if (!ros::ok())
+						return false;
+					i++;
+					rate->sleep();
+				}
+				ros::spinOnce();
+				rate->sleep();
+			}
 			return true;
 
 		}
@@ -222,6 +266,7 @@ int main(int argc, char** argv) {
 		TablePublisher myTablePub;
 		ros::NodeHandle nh("~");
 		myTablePub.initial_time = ros::Time::now().toSec(); 
+		ros::ServiceServer start_at = nh.advertiseService("start_at", &TablePublisher::start_at, &myTablePub);
 		ros::ServiceServer start_publishing = nh.advertiseService("start", &TablePublisher::start_me, &myTablePub);
 		ros::ServiceServer publishing_one = nh.advertiseService("step", &TablePublisher::publish_one_frame, &myTablePub);
 		ros::spin();
