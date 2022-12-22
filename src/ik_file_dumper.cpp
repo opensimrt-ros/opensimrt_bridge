@@ -133,19 +133,30 @@ class TablePublisher
 		{
 			//This is severely untested stuff. it may work by coincidence alone
 			bool started = false;
+			auto time_now = ros::Time::now();
+			auto last_time = time_now;
 			while(ros::ok())
 			{
-				auto time_now = ros::Time::now();
+				time_now = ros::Time::now();
 				if(time_now.sec>= start_secs && time_now.nsec >= start_nsecs)
 				{
 					ROS_INFO_STREAM_ONCE("started");
 					started = true;
+					initial_time = time_now.toSec();
 				}
 				if (time_now.sec >= stop_secs && time_now.nsec >= stop_nsecs)
 				{
 					ROS_INFO_STREAM_ONCE("stopped!");
 					i = 0;
 					started = false;
+				}
+				if (time_now.sec<last_time.sec)
+				{
+					ROS_INFO_STREAM("time now" << time_now.sec);
+					ROS_INFO_STREAM("last time" << last_time.sec);
+
+					ROS_WARN_STREAM("Time travel! resetting ");
+					i = 0;
 				}
 				if (started)
 				{
@@ -156,6 +167,7 @@ class TablePublisher
 					i++;
 					rate->sleep();
 				}
+				last_time = time_now;
 				ros::spinOnce();
 				rate->sleep();
 			}
