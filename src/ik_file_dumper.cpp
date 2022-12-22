@@ -44,6 +44,7 @@ class TablePublisher
 		//uint32_t stop_secs, stop_nsecs;
 		int start_secs, start_nsecs;
 		int stop_secs, stop_nsecs;
+		ros::Time start_time, stop_time;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
@@ -60,9 +61,12 @@ class TablePublisher
 			nh.param<int>("start_at_secs", start_secs, 1668695814);
 			nh.param<int>("start_at_nsecs", start_nsecs, 643890142);
 			
+			start_time = ros::Time{static_cast<uint32_t>(start_secs),static_cast<uint32_t>(start_nsecs)};
+
 			nh.param<int>("stop_at_secs", stop_secs, 1668695818);
 			nh.param<int>("stop_at_nsecs", stop_nsecs, 643890142);
-
+			
+			stop_time = ros::Time {static_cast<uint32_t>(stop_secs),static_cast<uint32_t>(stop_nsecs)};
 			//cheat
 			nh.param<double>("resample_period", resample_period, 0.01);
 
@@ -132,35 +136,49 @@ class TablePublisher
 		bool start_at(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
 		{
 			//This is severely untested stuff. it may work by coincidence alone
-			bool started = false;
 			auto time_now = ros::Time::now();
 			auto last_time = time_now;
+			bool started = false;
 			while(ros::ok())
 			{
 				time_now = ros::Time::now();
-				if(time_now.sec>= start_secs && time_now.nsec >= start_nsecs)
+				ROS_DEBUG_STREAM("time now" <<time_now);
+				ROS_DEBUG_STREAM("start time" << start_time);
+				ROS_DEBUG_STREAM("stop_time" << stop_time);
+				int running_time =time_now.toNSec()-start_time.toNSec(); 
+				ROS_DEBUG_STREAM("time_diff time_now - start_time:(nsec) " <<running_time);
+				int stoppin_time = time_now.toNSec() - stop_time.toNSec();
+				ROS_DEBUG_STREAM("stoppin_time" <<stoppin_time);
+				//ROS_INFO_STREAM("start_time" <<start_time.toSec() << "stop_time" << stop_time.toSec());
+				if (time_now.toNSec() < last_time.toNSec())
 				{
-					ROS_INFO_STREAM_ONCE("started");
-					started = true;
-					initial_time = time_now.toSec();
+					ROS_INFO_STREAM("time now" << time_now.toSec());
+					ROS_INFO_STREAM("last time" << last_time.toSec());
+					ROS_WARN_STREAM("Time travel! resetting ");
+					
 				}
-				if (time_now.sec >= stop_secs && time_now.nsec >= stop_nsecs)
+				if (running_time > 0 && !started)
 				{
-					ROS_INFO_STREAM_ONCE("stopped!");
-					i = 0;
+					initial_time = time_now.toNSec();
+					ROS_INFO_STREAM("Rising edge. Initial_time:" << initial_time);
+					started = true;
+				}
+				else if (stoppin_time > 0 && started)
+				{
+					ROS_INFO_STREAM("Lowering edge");
 					started = false;
 				}
-				if (time_now.sec<last_time.sec)
+				if(time_now == start_time || time_now == stop_time)
 				{
-					ROS_INFO_STREAM("time now" << time_now.sec);
-					ROS_INFO_STREAM("last time" << last_time.sec);
-
-					ROS_WARN_STREAM("Time travel! resetting ");
-					i = 0;
+					ROS_ERROR_STREAM("time now is equal to start_time or stop_time");
 				}
+
 				if (started)
 				{
-					publish_once();
+					double publishing_time = (time_now.toNSec() - initial_time)/1000000000.0;
+					publish_once(publishing_time);
+					ROS_DEBUG_STREAM("publishing time:" << publishing_time);
+					ROS_DEBUG_STREAM("time diff: " << time_now.toSec()-last_time.toSec());
 					ros::spinOnce();
 					if (!ros::ok())
 						return false;
@@ -193,18 +211,10 @@ class TablePublisher
 			return true;
 
 		}
-
-
-		void publish_once()
+		void publish_table(RowVector qqqqq, double t)
 		{
-			// get raw pose from table
-			ROS_DEBUG("Get raw pose from table");
-			auto qqqqq = qTable.getRowAtIndex(i);
 			opensimrt_msgs::CommonTimed msg;
 			std_msgs::Header h;
-
-			double t = qTable.getIndependentColumn()[i] + time_offset;
-
 			//msg.data.push_back(t);
 			// Possibly breaking change!!!!! I will make t the table time, instead of simulation time. Because it loops and then when trying to get the accurate grf from the table, I don't knwo what it the offset time. if things break, change common message to include the offset as well and then remove this offset in grf_mot_file_dumper from opensimrt_bridge to get the same results.
 			msg.time = t;
@@ -238,6 +248,25 @@ class TablePublisher
 			msg.header = h;
 			re_pub.publish(msg);
 			re_pub2.publish(msg);
+
+		}
+		void publish_once(double time)
+		{
+			double table_initial_time = qTable.getIndependentColumn().front();
+			double table_time =time+table_initial_time;
+			int k = qTable.getRowIndexAfterTime(table_time);
+			ROS_DEBUG_STREAM("table_time" << table_time << "time:" << time << "k" << k);
+			RowVector qqqqq = qTable.getRowAtIndex(k);
+			publish_table(qqqqq, table_time);
+		}
+		void publish_once()
+		{
+			// get raw pose from table
+			ROS_DEBUG("Get raw pose from table");
+			RowVector qqqqq = qTable.getRowAtIndex(i);
+
+			double t = qTable.getIndependentColumn()[i] + time_offset;
+			publish_table(qqqqq,t);
 
 
 		}
@@ -275,6 +304,9 @@ class TablePublisher
 int main(int argc, char** argv) {
 	try { //should be avoided.
 		ros::init(argc, argv, "ik_file_bridge");
+	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+		ros::console::notifyLoggerLevelsChanged();
+	}
 		TablePublisher myTablePub;
 		ros::NodeHandle nh("~");
 		myTablePub.initial_time = ros::Time::now().toSec(); 
