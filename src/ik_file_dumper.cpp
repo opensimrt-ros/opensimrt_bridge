@@ -3,6 +3,7 @@
 #include <Actuators/Thelen2003Muscle.h>
 #include <Common/TimeSeriesTable.h>
 #include <OpenSim/Common/STOFileAdapter.h>
+#include "ros/duration.h"
 #include "ros/init.h"
 #include "ros/node_handle.h"
 #include "ros/publisher.h"
@@ -45,6 +46,7 @@ class TablePublisher
 		int start_secs, start_nsecs;
 		int stop_secs, stop_nsecs;
 		ros::Time start_time, stop_time;
+		double table_initial_time, table_final_time;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
@@ -60,12 +62,12 @@ class TablePublisher
 
 			nh.param<int>("start_at_secs", start_secs, 1668695814);
 			nh.param<int>("start_at_nsecs", start_nsecs, 643890142);
-			
+
 			start_time = ros::Time{static_cast<uint32_t>(start_secs),static_cast<uint32_t>(start_nsecs)};
 
 			nh.param<int>("stop_at_secs", stop_secs, 1668695818);
 			nh.param<int>("stop_at_nsecs", stop_nsecs, 643890142);
-			
+
 			stop_time = ros::Time {static_cast<uint32_t>(stop_secs),static_cast<uint32_t>(stop_nsecs)};
 			//cheat
 			nh.param<double>("resample_period", resample_period, 0.01);
@@ -79,6 +81,8 @@ class TablePublisher
 			// get kinematics as a table with ordered coordinates
 			qTable = OpenSimUtils::getMultibodyTreeOrderedCoordinatesFromStorage(
 					model, ik_file, resample_period); ///this is resampling!!!!!
+			table_initial_time = qTable.getIndependentColumn().front();
+			table_final_time = qTable.getIndependentColumn().back();
 			ROS_WARN_STREAM("The precision of this algorithm and data downstream is inflated. IK data was resampled! ");
 
 			ROS_INFO_STREAM("Number of variables measured: " << qTable.getRowAtIndex(0).size());
@@ -133,6 +137,7 @@ class TablePublisher
 			return true;
 
 		}
+
 		bool start_at(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
 		{
 			//This is severely untested stuff. it may work by coincidence alone
@@ -145,9 +150,9 @@ class TablePublisher
 				ROS_DEBUG_STREAM("time now" <<time_now);
 				ROS_DEBUG_STREAM("start time" << start_time);
 				ROS_DEBUG_STREAM("stop_time" << stop_time);
-				int running_time =time_now.toNSec()-start_time.toNSec(); 
+				double running_time = (time_now - start_time).toNSec(); 
 				ROS_DEBUG_STREAM("time_diff time_now - start_time:(nsec) " <<running_time);
-				int stoppin_time = time_now.toNSec() - stop_time.toNSec();
+				double stoppin_time = (time_now - stop_time).toNSec();
 				ROS_DEBUG_STREAM("stoppin_time" <<stoppin_time);
 				//ROS_INFO_STREAM("start_time" <<start_time.toSec() << "stop_time" << stop_time.toSec());
 				if (time_now.toNSec() < last_time.toNSec())
@@ -155,17 +160,29 @@ class TablePublisher
 					ROS_INFO_STREAM("time now" << time_now.toSec());
 					ROS_INFO_STREAM("last time" << last_time.toSec());
 					ROS_WARN_STREAM("Time travel! resetting ");
-					
+
 				}
-				if (running_time > 0 && !started)
+				//if (running_time > 0 && !started)
+				if ((time_now.toNSec()>start_time.toNSec() && time_now.toNSec()<stop_time.toNSec()) && !started)
 				{
 					initial_time = time_now.toNSec();
 					ROS_INFO_STREAM("Rising edge. Initial_time:" << initial_time);
+				ROS_INFO_STREAM("time now" <<time_now);
+				ROS_INFO_STREAM("start time" << start_time);
+				ROS_INFO_STREAM("stop_time" << stop_time);
+					//ROS_INFO_STREAM("running_time (time_now - start_time):int [nsec] " << running_time);
+					ros::Time maximum_possible_time_to_play = time_now + ros::Duration(table_final_time);
+					ROS_INFO_STREAM("Maximum_possible time to play:" << maximum_possible_time_to_play );
 					started = true;
 				}
-				else if (stoppin_time > 0 && started)
+				//else if (stoppin_time > 0 && started)
+				if ((time_now.toNSec()>stop_time.toNSec() || time_now.toNSec()<start_time.toNSec()) && started)
 				{
+				ROS_INFO_STREAM("time now" <<time_now);
+				ROS_INFO_STREAM("start time" << start_time);
+				ROS_INFO_STREAM("stop_time" << stop_time);
 					ROS_INFO_STREAM("Lowering edge");
+					//ROS_INFO_STREAM("stoppin_time (time_now - stop_time):int [nsec] " << stoppin_time);
 					started = false;
 				}
 				if(time_now == start_time || time_now == stop_time)
@@ -182,7 +199,7 @@ class TablePublisher
 					ros::spinOnce();
 					if (!ros::ok())
 						return false;
-					i++;
+					//i++;
 					rate->sleep();
 				}
 				last_time = time_now;
@@ -197,7 +214,7 @@ class TablePublisher
 			if (qTable.getNumRows() == i)
 			{
 				j++;
-				initial_time = ros::Time::now().toSec();
+				initial_time = ros::Time::now().toNSec();
 				time_offset = j * (qTable.getIndependentColumn().back()+resample_period); // we need resample period or 
 				i= 0;
 				publish_once();
@@ -236,7 +253,7 @@ class TablePublisher
 
 			h.frame_id = "subject";
 			ros::Time frameTime = ros::Time::now();
-			double time_difference = (frameTime.toSec() - initial_time )/rate_divider + time_offset;
+			double time_difference = (frameTime.toNSec() - initial_time )/rate_divider/1E9 + table_initial_time + time_offset;
 			if ( std::abs(time_difference - t) > time_error_threshold )
 			{
 				ROS_INFO_STREAM("Time offset:" << time_offset );
@@ -252,12 +269,18 @@ class TablePublisher
 		}
 		void publish_once(double time)
 		{
-			double table_initial_time = qTable.getIndependentColumn().front();
 			double table_time =time+table_initial_time;
-			int k = qTable.getRowIndexAfterTime(table_time);
-			ROS_DEBUG_STREAM("table_time" << table_time << "time:" << time << "k" << k);
-			RowVector qqqqq = qTable.getRowAtIndex(k);
-			publish_table(qqqqq, table_time);
+			if (table_time > table_final_time)
+			{
+				ROS_WARN_STREAM("Time: " << table_time << " exceeds maximum time in source table:" << table_final_time << endl << ". Publishing nothing" );
+			}
+			else
+			{
+				int k = qTable.getRowIndexAfterTime(table_time);
+				ROS_DEBUG_STREAM("table_time" << table_time << "time:" << time << "k" << k);
+				RowVector qqqqq = qTable.getRowAtIndex(k);
+				publish_table(qqqqq, table_time);
+			}
 		}
 		void publish_once()
 		{
@@ -283,7 +306,7 @@ class TablePublisher
 			}
 
 			for (j = executed_loops; j < simulation_loops + executed_loops; j++) {
-				initial_time = ros::Time::now().toSec();
+				initial_time = ros::Time::now().toNSec();
 				time_offset = j * (qTable.getIndependentColumn().back()+resample_period); // we need resample period or 
 				ROS_INFO_STREAM("Time offset:" << time_offset );
 				for (i = 0; i < qTable.getNumRows(); i++) {
@@ -304,12 +327,13 @@ class TablePublisher
 int main(int argc, char** argv) {
 	try { //should be avoided.
 		ros::init(argc, argv, "ik_file_bridge");
-	if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
-		ros::console::notifyLoggerLevelsChanged();
-	}
+		bool debug = false;
+		if( debug && ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
+			ros::console::notifyLoggerLevelsChanged();
+		}
 		TablePublisher myTablePub;
 		ros::NodeHandle nh("~");
-		myTablePub.initial_time = ros::Time::now().toSec(); 
+		myTablePub.initial_time = ros::Time::now().toNSec(); 
 		ros::ServiceServer start_at = nh.advertiseService("start_at", &TablePublisher::start_at, &myTablePub);
 		ros::ServiceServer start_publishing = nh.advertiseService("start", &TablePublisher::start_me, &myTablePub);
 		ros::ServiceServer publishing_one = nh.advertiseService("step", &TablePublisher::publish_one_frame, &myTablePub);

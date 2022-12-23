@@ -15,10 +15,14 @@
                 <param name="remove_n_last_rows" 	value="0" />
 		<param name="simulation_loops" 		value="1" />
 		
-		<param name="start_at_secs" 		value="1668695814" />
-		<param name="start_at_nsecs" 		value="643890142" />
-		<param name="stop_at_secs" 		value="1668695816" />
-		<param name="stop_at_nsecs" 		value="883890142" />
+		<!-- MINIMUM: param name="start_at_secs" 		value="1668695816" />
+		<param name="start_at_nsecs" 		value="327003000" / -->
+		<param name="start_at_secs" 		value="1668695818" />
+		<param name="start_at_nsecs" 		value="327003000" />
+		<param name="stop_at_secs" 		value="1668695820" />
+		<param name="stop_at_nsecs" 		value="273229000" />
+		<!-- MAXIMUM param name="stop_at_secs" 		value="1668695821" />
+		<param name="stop_at_nsecs" 		value="273229000" / -->
 
                 <param name="resample_period" 		value="0.01" />
 		<!-- maybe you want to run this node slower than the resampling period to give a lot of time between messages for the other algorithms to run. Otherwise this number should be one -->
