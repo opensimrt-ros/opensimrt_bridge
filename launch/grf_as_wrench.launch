@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <launch>
 
-	<!-- arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" / -->
-	<arg name="grf_mot_file" 	default="/catkin_opensim/src/opensimrt_bridge/data/grf_fk_Gait6.mot" />
+	<arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" />
+	<!-- arg name="grf_mot_file" 	default="/catkin_opensim/src/opensimrt_bridge/data/grf_fk_Gait6.mot" / -->
 
 	<node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
-		<param name="read_4_force_plates" 		value="true" />
+		<param name="read_4_force_plates" 		value="false" />
 		<param name="grf_mot_file" 			value="$(arg grf_mot_file)" />
 		<param name="grf_right_apply_to_body"		value="calcn_r"/>
 		<param name="grf_right_force_expressed_in_body"	value="ground"/>
@@ -14,12 +14,12 @@
 		<param name="grf_left_force_expressed_in_body"	value="ground"/>
 		<param name="grf_left_point_expressed_in_body"	value="ground"/>
 		<!-- these are prefixes for the table -->
-		<param name="grf_right_point_identifier"	value="ground_force1_p"/>
-		<param name="grf_right_force_identifier"	value="ground_force1_v"/>
-		<param name="grf_right_torque_identifier"	value="ground_torque1_"/>
-		<param name="grf_left_point_identifier"		value="ground_force4_p"/>
-		<param name="grf_left_force_identifier"		value="ground_force4_v"/>
-		<param name="grf_left_torque_identifier"	value="ground_torque4_"/>
+		<param name="grf_right_point_identifier"	value="ground_force_p"/>
+		<param name="grf_right_force_identifier"	value="ground_force_v"/>
+		<param name="grf_right_torque_identifier"	value="ground_torque_"/>
+		<param name="grf_left_point_identifier"		value="1_ground_force_p"/>
+		<param name="grf_left_force_identifier"		value="1_ground_force_v"/>
+		<param name="grf_left_torque_identifier"	value="1_ground_torque_"/>
 
 		<!-- filter parameters -->
 
@@ -42,7 +42,7 @@
 
 		<remap from="/grf_from_file/input" 	to="/ik/output"/>
 		<remap from="/in_labels" 		to="/ik/outlabels"/>
-		<remap from="/grf_both" 		to="/grf_node/output"/>
+		<!-- remap from="/grf_both" 		to="/grf_node/output"/ -->
 		<remap from="/grf_from_file/out_labels" to="/grf_node/out_labels"/>
 
 	</node>

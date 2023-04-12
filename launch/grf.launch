@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <launch>
 
-	<!-- arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" / -->
-	<arg name="grf_mot_file" 	default="/catkin_opensim/src/opensimrt_bridge/data/grf_fk_Gait6.mot" />
+	<arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" />
+	<!-- arg name="grf_mot_file" 	default="/catkin_opensim/src/opensimrt_bridge/data/grf_fk_Gait6.mot" / -->
 
 	<node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
+		<param name="read_4_force_plates" 		value="false" />
 		<param name="grf_mot_file" 			value="$(arg grf_mot_file)" />
 		<param name="grf_right_apply_to_body"		value="calcn_r"/>
 		<param name="grf_right_force_expressed_in_body"	value="ground"/>
