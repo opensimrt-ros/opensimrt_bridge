@@ -18,6 +18,7 @@
 #include "std_srvs/EmptyRequest.h"
 #include "std_srvs/EmptyResponse.h"
 #include <cstdlib>
+#include "opensimrt_bridge/IkPublisher.h"
 
 using namespace std;
 using namespace OpenSim;
@@ -47,13 +48,13 @@ class TablePublisher
 		int stop_secs, stop_nsecs;
 		ros::Time start_time, stop_time;
 		double table_initial_time, table_final_time;
+		IkPublisher ik_pub;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
 			string subject_dir, model_file, ik_file;
 			nh.param<std::string>("model_file", model_file, "");
 			nh.param<std::string>("ik_file", ik_file, "");
-
 			// repeat cyclic motion X times
 			nh.param<int>("simulation_loops", simulation_loops, 0);
 			// remove last N samples in motion for smooth transition between loops
@@ -93,12 +94,13 @@ class TablePublisher
 			ros::NodeHandle n;
 			//ros::Publisher re_pub = nh.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
 			//ros::Publisher re_pub2 = nh.advertise<opensimrt_msgs::CommonTimed>("r_data2", 1000);
-			re_pub = nh.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
+			//re_pub = nh.advertise<opensimrt_msgs::CommonTimed>("r_data", 1000);
 			re_pub2 = nh.advertise<opensimrt_msgs::CommonTimed>("r_data2", 1000);
 			//ros::Publisher labels_pub = n.advertise<opensimrt_msgs::Labels>("r_labels", 1000, true); //latching topic
-			gets_labels = nh.advertiseService("out_labels", &TablePublisher::update_labels, this);
-			labels = qTable.getColumnLabels();
-
+			//gets_labels = nh.advertiseService("out_labels", &TablePublisher::update_labels, this);
+			ik_pub.output_labels = qTable.getColumnLabels();
+			ik_pub.numSignals= ik_pub.output_labels.size();
+			ik_pub.onInit();
 			// this is wrong.
 			/*opensimrt_msgs::Labels l_msg;
 			  l_msg.data = labels;
@@ -263,7 +265,9 @@ class TablePublisher
 			}
 			h.stamp = frameTime;
 			msg.header = h;
-			re_pub.publish(msg);
+			//re_pub.publish(msg);
+			//ROS_INFO_STREAM(qqqqq);
+			ik_pub.publish(t,~qqqqq,time_offset);
 			re_pub2.publish(msg);
 
 		}
@@ -298,7 +302,7 @@ class TablePublisher
 			// subject data
 			//auto section = "TEST_ACCELERATION_GRFM_PREDICTION_FROM_FILE";
 			ros::Rate r(1);
-			while(!pudlished)
+			while(!ik_pub.published_labels_at_least_once)
 			{
 				ros::spinOnce();
 				r.sleep();
