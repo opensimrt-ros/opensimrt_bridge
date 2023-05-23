@@ -49,6 +49,7 @@ class TablePublisher
 		ros::Time start_time, stop_time;
 		double table_initial_time, table_final_time;
 		IkPublisher ik_pub;
+		bool async_run, running;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
@@ -74,6 +75,8 @@ class TablePublisher
 			nh.param<double>("resample_period", resample_period, 0.01);
 
 			nh.param<double>("rate_divider", rate_divider, 1);
+			nh.param<bool>("async_run", async_run, false);
+			running = false;
 			// setup model
 			Object::RegisterType(Thelen2003Muscle());
 			Model model(model_file);
@@ -135,7 +138,10 @@ class TablePublisher
 
 		bool start_me(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & res)
 		{
-			run();
+			if (async_run)
+				running = true;
+			else
+				run();
 			return true;
 
 		}
@@ -308,7 +314,11 @@ class TablePublisher
 				r.sleep();
 				ROS_INFO_STREAM("stuck"); 
 			}
+			inner_loop();
 
+		}
+		void inner_loop()
+		{
 			for (j = executed_loops; j < simulation_loops + executed_loops; j++) {
 				initial_time = ros::Time::now().toNSec();
 				time_offset = j * (qTable.getIndependentColumn().back()+resample_period); // we need resample period or 
@@ -341,6 +351,17 @@ int main(int argc, char** argv) {
 		ros::ServiceServer start_at = nh.advertiseService("start_at", &TablePublisher::start_at, &myTablePub);
 		ros::ServiceServer start_publishing = nh.advertiseService("start", &TablePublisher::start_me, &myTablePub);
 		ros::ServiceServer publishing_one = nh.advertiseService("step", &TablePublisher::publish_one_frame, &myTablePub);
+		if (myTablePub.async_run)
+			{
+				ros::Rate async_rate(10);
+				while(ros::ok())
+				{
+					if (myTablePub.running)
+						myTablePub.inner_loop();
+					ros::spinOnce();
+					async_rate.sleep();
+				}
+			}
 		ros::spin();
 	} 
 	catch ( ros::Exception &e ) {
