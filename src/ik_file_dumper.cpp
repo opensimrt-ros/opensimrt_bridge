@@ -359,7 +359,7 @@ int main(int argc, char** argv) {
 				if (myTablePub.running)
 				{
 					myTablePub.inner_loop();
-					running= false;
+					myTablePub.running= false;
 				}
 				ros::spinOnce();
 				async_rate.sleep();
