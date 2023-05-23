@@ -175,9 +175,9 @@ class TablePublisher
 				{
 					initial_time = time_now.toNSec();
 					ROS_INFO_STREAM("Rising edge. Initial_time:" << initial_time);
-				ROS_INFO_STREAM("time now" <<time_now);
-				ROS_INFO_STREAM("start time" << start_time);
-				ROS_INFO_STREAM("stop_time" << stop_time);
+					ROS_INFO_STREAM("time now" <<time_now);
+					ROS_INFO_STREAM("start time" << start_time);
+					ROS_INFO_STREAM("stop_time" << stop_time);
 					//ROS_INFO_STREAM("running_time (time_now - start_time):int [nsec] " << running_time);
 					ros::Time maximum_possible_time_to_play = time_now + ros::Duration(table_final_time);
 					ROS_INFO_STREAM("Maximum_possible time to play:" << maximum_possible_time_to_play );
@@ -186,9 +186,9 @@ class TablePublisher
 				//else if (stoppin_time > 0 && started)
 				if ((time_now.toNSec()>stop_time.toNSec() || time_now.toNSec()<start_time.toNSec()) && started)
 				{
-				ROS_INFO_STREAM("time now" <<time_now);
-				ROS_INFO_STREAM("start time" << start_time);
-				ROS_INFO_STREAM("stop_time" << stop_time);
+					ROS_INFO_STREAM("time now" <<time_now);
+					ROS_INFO_STREAM("start time" << start_time);
+					ROS_INFO_STREAM("stop_time" << stop_time);
 					ROS_INFO_STREAM("Lowering edge");
 					//ROS_INFO_STREAM("stoppin_time (time_now - stop_time):int [nsec] " << stoppin_time);
 					started = false;
@@ -352,16 +352,19 @@ int main(int argc, char** argv) {
 		ros::ServiceServer start_publishing = nh.advertiseService("start", &TablePublisher::start_me, &myTablePub);
 		ros::ServiceServer publishing_one = nh.advertiseService("step", &TablePublisher::publish_one_frame, &myTablePub);
 		if (myTablePub.async_run)
+		{
+			ros::Rate async_rate(10);
+			while(ros::ok())
 			{
-				ros::Rate async_rate(10);
-				while(ros::ok())
+				if (myTablePub.running)
 				{
-					if (myTablePub.running)
-						myTablePub.inner_loop();
-					ros::spinOnce();
-					async_rate.sleep();
+					myTablePub.inner_loop();
+					running= false;
 				}
+				ros::spinOnce();
+				async_rate.sleep();
 			}
+		}
 		ros::spin();
 	} 
 	catch ( ros::Exception &e ) {
