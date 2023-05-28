@@ -19,6 +19,8 @@ catkin_package(
   CATKIN_DEPENDS opensimrt_msgs roscpp
   tf2
   tf2_ros
+  INCLUDE_DIRS include
+  LIBRARIES conversions
 )
 
 include_directories(
@@ -64,6 +66,7 @@ add_executable(grf_dump src/grf_mot_file_dumper.cpp)
 add_dependencies(grf_dump ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(grf_dump
+	conversions
   ${catkin_LIBRARIES}
   ${OpenSim_LIBRARIES}
   ${opensimrt_LIBRARIES}
@@ -79,4 +82,14 @@ target_link_libraries(${PROJECT_NAME}_node
   ${OpenSim_LIBRARIES}
   ${opensimrt_LIBRARIES}
 )
+file (GLOB conversions_SOURCES CONFIGURE_DEPENDS "src/conversions/*.cpp")
+file (GLOB conversions_HEADERS CONFIGURE_DEPENDS "include/opensimrt_bridge/conversions/*.h")
+
+set(target conversions)
+
+add_library(conversions ${conversions_HEADERS} ${conversions_SOURCES} )
+
+target_link_libraries(conversions ${catkin_LIBRARIES} ${OpenSim_LIBRARIES})
+
+add_dependencies(conversions ${catkin_EXPORTED_TARGETS})
 

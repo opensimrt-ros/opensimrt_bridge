@@ -1,3 +1,5 @@
+#ifndef CONV_MISC_FBK_28052023
+#define CONV_MISC_FBK_28052023
 
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Wrench.h"
@@ -38,17 +40,7 @@ namespace Osb
 		};
 
 	//gotta love conversions
-	std::vector<std::string> conv_labels(OpenSim::Array<std::string> arg)
-	{
-		std::vector<std::string> out;
-		for (int i=0;i<arg.size();i++)
-		{
-			std::string hello =arg.get(i);
-			std::cout << hello << " "<< std::endl;
-			out.push_back(arg.get(i));
-		};
-		return out;
-	};
+	std::vector<std::string> conv_labels(OpenSim::Array<std::string> arg);
 	
 	template <class T> 
 	geometry_msgs::Wrench get_as_ros_wrench(T oW)
@@ -62,3 +54,4 @@ namespace Osb
 	}
 }
 
+#endif

@@ -21,7 +21,7 @@
 #include "std_msgs/Header.h"
 #include <SimTKcommon/SmallMatrix.h>
 #include <cstdlib>
-#include <opensimrt_bridge/conversions.h>
+#include <opensimrt_bridge/conversions/misc.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include "Ros/include/common_node.h"
