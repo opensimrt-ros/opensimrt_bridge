@@ -42,7 +42,7 @@
 
 		<remap from="/grf_from_file/input" 	to="/ik/output"/>
 		<remap from="/in_labels" 		to="/ik/outlabels"/>
-		<remap from="/grf_both" 		to="/grf_node/output"/>
+		<!-- remap from="/grf_both" 		to="/grf_node/output"/ -->
 		<remap from="/grf_from_file/out_labels" to="/grf_node/out_labels"/>
 
 	</node>

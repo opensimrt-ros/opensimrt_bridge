@@ -2,7 +2,6 @@
 <launch>
 
 	<arg name="grf_mot_file" 	default="/srv/data/gait1992/experimental_data/task_grf.mot" />
-	<!-- arg name="grf_mot_file" 	default="/catkin_opensim/src/opensimrt_bridge/data/grf_fk_Gait6.mot" / -->
 
 	<node pkg="opensimrt_bridge" type="grf_dump" 	name="grf_from_file" output="screen">
 		<param name="read_4_force_plates" 		value="false" />
@@ -30,25 +29,17 @@
 		<param name="spline_order"	value="3"/>
 
 		<param name="publish_tf"	value="true" />
-		<!-- Much time was spent here, so pay attention!
-		The rotation is applied AFTER translating, so the translation is still done
-		In the original frame of reference. This is maybe something someone will
-		want (It is ROS' default), hence it is left here. But what you probably want
-		is to have another fix tf publisher doing this for both of them. as below-->
 		<param name="tf_apply_rotation"	value="false"/>
 		<param name="tf_right_foot_frame"	value="right_foot_forceplate"/>
 		<param name="tf_left_foot_frame"	value="left_foot_forceplate"/>
-		<param name="tf_ref_frame"	value="subject_opensim"/>
+		<param name="tf_ref_frame"	value="map"/>
 
 		<remap from="/grf_from_file/input" 	to="/ik/output"/>
 		<remap from="/in_labels" 		to="/ik/outlabels"/>
-		<remap from="/grf_both" 		to="/grf_node/output"/>
-		<remap from="/grf_from_file/out_labels" to="/grf_node/out_labels"/>
+		<remap from="/grf_both" 		to="/grf_node2/output"/>
+		<remap from="/grf_from_file/out_labels" to="/grf_node2/out_labels"/>
+
 
 	</node>
-	<arg name="freq" default="25" />
-	<!--node pkg="tf" type="static_transform_publisher" name="subject_opensim_to_ros" args="0 0 0 0 0.7071 0.7071 0 map subject_opensim $(arg freq)" / -->
-	<node pkg="tf" type="static_transform_publisher" name="subject_opensim_to_ros" args="0 0 0 0.5 0.5 0.5 0.5 map subject_opensim $(arg freq)" />
-
 
 </launch>
