@@ -4,6 +4,7 @@
  * @created     : Saturday May 27, 2023 19:28:28 CEST
  */
 #include "geometry_msgs/TransformStamped.h"
+#include "opensimrt_msgs/Dual.h"
 #include "ros/ros.h"
 #include "opensimrt_bridge/conversions/message_convs.h"
 #include "opensimrt_msgs/CommonTimed.h"
@@ -281,7 +282,12 @@ namespace Osb
 		return grfIndexes;
 	}
 
+	opensimrt_msgs::Dual get_SO_as_Dual(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput)
+	{
+		ROS_ERROR("not implemented. only here to make this build.\n Also do not use Dual messages, this message has no header and hence cannot be synchronized, which was the whole purpose of creating this in the first place. change the code to use MultiMessage.msg instead!!!!!");
+	return opensimrt_msgs::Dual();
 
+	}
 
 
 }

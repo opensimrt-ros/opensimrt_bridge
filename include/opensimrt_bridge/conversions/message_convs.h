@@ -7,11 +7,15 @@
 #ifndef MESSAGE_CONVERTERS_UTILS_H
 #define MESSAGE_CONVERTERS_UTILS_H
 
+#include "MuscleOptimization.h"
 #include "RealTime/include/experimental/GRFMNonSmooth.h"
 #include "SignalProcessing.h"
 #include "geometry_msgs/WrenchStamped.h"
 #include "opensimrt_msgs/CommonTimed.h"
+#include "opensimrt_msgs/Event.h"
+#include "opensimrt_msgs/Dual.h"
 #include "opensimrt_msgs/PosVelAccTimed.h"
+#include "ros/message_traits.h"
 #include "tf2_ros/buffer.h"
 #include <SimTKcommon/internal/BigMatrix.h>
 
@@ -42,7 +46,7 @@ namespace Osb
 
 	boost::array<int,9> generateIndexes(std::vector<std::string> pick, std::vector<std::string> whole); 
 
-
+	opensimrt_msgs::Dual get_SO_as_Dual(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
 
 
 }
