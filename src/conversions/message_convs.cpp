@@ -4,7 +4,8 @@
  * @created     : Saturday May 27, 2023 19:28:28 CEST
  */
 #include "geometry_msgs/TransformStamped.h"
-#include "opensimrt_msgs/Dual.h"
+#include "opensimrt_msgs/MultiMessage.h"
+#include "opensimrt_msgs/MultiMessagePosVelAcc.h"
 #include "ros/ros.h"
 #include "opensimrt_bridge/conversions/message_convs.h"
 #include "opensimrt_msgs/CommonTimed.h"
@@ -289,5 +290,14 @@ namespace Osb
 
 	}
 
-
+	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput)
+	{
+		ROS_ERROR("not implemented");
+		return opensimrt_msgs::MultiMessage();
+	}
+	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput)
+	{
+		ROS_ERROR("not implemented");
+		return opensimrt_msgs::MultiMessagePosVelAcc();
+	}
 }

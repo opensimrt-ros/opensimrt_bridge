@@ -14,6 +14,8 @@
 #include "opensimrt_msgs/CommonTimed.h"
 #include "opensimrt_msgs/Event.h"
 #include "opensimrt_msgs/Dual.h"
+#include "opensimrt_msgs/MultiMessage.h"
+#include "opensimrt_msgs/MultiMessagePosVelAcc.h"
 #include "opensimrt_msgs/PosVelAccTimed.h"
 #include "ros/message_traits.h"
 #include "tf2_ros/buffer.h"
@@ -47,6 +49,8 @@ namespace Osb
 	boost::array<int,9> generateIndexes(std::vector<std::string> pick, std::vector<std::string> whole); 
 
 	opensimrt_msgs::Dual get_SO_as_Dual(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
+	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
+	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput);
 
 
 }
