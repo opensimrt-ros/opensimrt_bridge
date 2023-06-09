@@ -133,7 +133,7 @@ namespace Osb
 			wO.point[2] = nulltransform.transform.translation.z;
 			//actualtransform = tfBuffer.lookupTransform("map", ref_frame, ros::Time(0));
 			//inv_t = tfBuffer.lookupTransform(ref_frame,"map", ros::Time(0));
-			ROS_INFO_STREAM("null transform::\n" << nulltransform);
+			//ROS_DEBUG_STREAM("null transform::\n" << nulltransform);
 			//ROS_DEBUG_STREAM("actual transform" << actualtransform);
 			//ROS_DEBUG_STREAM("inverse transform" << inv_t);
 			//inv_t converts back to opensim
@@ -142,12 +142,12 @@ namespace Osb
 
 		}
 		catch (tf2::TransformException &ex) {
-			ROS_ERROR("transform exception: %s",ex.what());
+			ROS_ERROR("message_convs.cpp parse_message transform exception: %s",ex.what());
 			ros::Duration(1.0).sleep();
 			return wO;
 		}
 
-		ROS_WARN_STREAM("TFs in wrench parsing of geometry_wrench messages not implemented! Rotated frames will fail!");
+		//ROS_WARN_STREAM("TFs in wrench parsing of geometry_wrench messages not implemented! Rotated frames will fail!");
 		return wO;
 
 	}
