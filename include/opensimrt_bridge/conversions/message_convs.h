@@ -50,6 +50,7 @@ namespace Osb
 	
 	[[deprecated("Dual messages can't be synchronized. Use MultiMessage instead.")]]
 	opensimrt_msgs::Dual get_SO_as_Dual(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
+	opensimrt_msgs::MultiMessage get_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,SimTK::Vector vk);
 	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
 	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput);
 

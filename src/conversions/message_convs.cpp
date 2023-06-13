@@ -12,6 +12,7 @@
 #include "opensimrt_msgs/CommonTimed.h"
 #include "tf2/exceptions.h"
 #include "tf2_ros/buffer.h"
+#include <SimTKcommon/internal/BigMatrix.h>
 
 //pattern : i have some opensim object and i pass it to the converter and it will return me the message i need for the publisher like
 //
@@ -291,6 +292,19 @@ namespace Osb
 
 	}
 
+	opensimrt_msgs::MultiMessage get_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,SimTK::Vector vk)
+	{
+		opensimrt_msgs::MultiMessage msg;
+		msg.header = h;
+		for (auto qi:q)
+			msg.ik.data.push_back(qi);
+		opensimrt_msgs::OpenSimData vv;
+		for (auto vi:vk)
+			vv.data.push_back(vi);
+		msg.other.push_back(vv);
+		msg.time = t;
+		return msg;
+	}
 	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput)
 	{
 		opensimrt_msgs::MultiMessage msg;
