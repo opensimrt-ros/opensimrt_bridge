@@ -6,6 +6,7 @@
 #include "geometry_msgs/TransformStamped.h"
 #include "opensimrt_msgs/MultiMessage.h"
 #include "opensimrt_msgs/MultiMessagePosVelAcc.h"
+#include "opensimrt_msgs/OpenSimData.h"
 #include "ros/ros.h"
 #include "opensimrt_bridge/conversions/message_convs.h"
 #include "opensimrt_msgs/CommonTimed.h"
@@ -292,12 +293,34 @@ namespace Osb
 
 	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput)
 	{
-		ROS_ERROR("not implemented");
-		return opensimrt_msgs::MultiMessage();
+		opensimrt_msgs::MultiMessage msg;
+		msg.header = h;
+		for (auto qi:q)
+			msg.ik.data.push_back(qi);
+		opensimrt_msgs::OpenSimData soAm, soFm;
+		for (auto soi:soOutput.am)
+			soAm.data.push_back(soi);
+		msg.other.push_back(soAm);
+		for (auto soi:soOutput.fm)
+			soFm.data.push_back(soi);
+		msg.other.push_back(soFm);
+		msg.time = t;
+		return msg;
 	}
 	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput)
 	{
-		ROS_ERROR("not implemented");
-		return opensimrt_msgs::MultiMessagePosVelAcc();
+		auto a_msg = get_SO_as_Multi(h, t, q, soOutput);
+		opensimrt_msgs::MultiMessagePosVelAcc msg;
+		msg.d0_data = a_msg.ik;
+		msg.header = a_msg.header;
+		msg.offsettime = a_msg.offsettime;
+		msg.other = a_msg.other;
+		msg.time = a_msg.time;
+		//now the other fields that are missing
+		for (auto qdi:qDot)
+			msg.d1_data.data.push_back(qdi);
+		for (auto qddi:qDDot)
+			msg.d2_data.data.push_back(qddi);
+		return msg;
 	}
 }
