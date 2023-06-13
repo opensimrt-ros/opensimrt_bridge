@@ -47,7 +47,8 @@ namespace Osb
 	void print_wrench(OpenSimRT::ExternalWrench::Input w);
 
 	boost::array<int,9> generateIndexes(std::vector<std::string> pick, std::vector<std::string> whole); 
-
+	
+	[[deprecated("Dual messages can't be synchronized. Use MultiMessage instead.")]]
 	opensimrt_msgs::Dual get_SO_as_Dual(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
 	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput);
 	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput);
