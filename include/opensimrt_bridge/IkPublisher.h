@@ -24,7 +24,8 @@ class IkPublisher
 		ros::ServiceServer outLabelsSrv;
 		//bool outLabels(opensimrt_msgs::LabelsSrv::Request & req, opensimrt_msgs::LabelsSrv::Response& res );
 		int numSignals = -1;
-
+		double last_published_time = -1; //we want to prevent the spline filter from crashing. this is a random mistake that seems to depend on execution times, so let's at least catch it here without needing debug prints
+		double last_time_minimal_time_difference = 1e-6;
 		void setFilter()
 		{
 			if (numSignals >0)
@@ -70,6 +71,13 @@ class IkPublisher
 		}
 		void publish(double t,  SimTK::Vector qRaw, double offsettime = 0)
 		{
+			if (t <= last_published_time)
+			{
+				ROS_ERROR_STREAM("I am getting an incorrect time:" << t << "which is smaller or equal to the last time I received!!! last_time:" <<last_published_time
+						<< "I am adding a bit of a time correction (" << last_time_minimal_time_difference << ") to this sample to keep things running, but this is a mistake, please fix it!");
+				t+=last_time_minimal_time_difference;
+			}
+			last_published_time = t;
 			opensimrt_msgs::CommonTimed msg;
 			std_msgs::Header h;
 			h.stamp = ros::Time::now();

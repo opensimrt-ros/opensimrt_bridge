@@ -204,11 +204,9 @@ class TablePublisher
 					publish_once(publishing_time);
 					ROS_DEBUG_STREAM("publishing time:" << publishing_time);
 					ROS_DEBUG_STREAM("time diff: " << time_now.toSec()-last_time.toSec());
-					ros::spinOnce();
 					if (!ros::ok())
 						return false;
 					//i++;
-					rate->sleep();
 				}
 				last_time = time_now;
 				ros::spinOnce();
@@ -282,7 +280,7 @@ class TablePublisher
 			double table_time =time+table_initial_time;
 			if (table_time > table_final_time)
 			{
-				ROS_WARN_STREAM("Time: " << table_time << " exceeds maximum time in source table:" << table_final_time << endl << ". Publishing nothing" );
+				ROS_WARN_STREAM_ONCE("Time: " << table_time << " exceeds maximum time in source table:" << table_final_time << endl << ". Publishing nothing" );
 			}
 			else
 			{
