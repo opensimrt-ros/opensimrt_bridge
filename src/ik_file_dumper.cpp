@@ -150,69 +150,30 @@ class TablePublisher
 		{
 			//This is severely untested stuff. it may work by coincidence alone
 			auto time_now = ros::Time::now();
-			auto last_time = time_now;
 			auto start_time_nsecs = start_time.toNSec();
 			auto stop_time_nsecs = stop_time.toNSec();
 			bool started = false;
 			while(ros::ok())
 			{
 				time_now = ros::Time::now();
-				ROS_DEBUG_STREAM("time now" <<time_now);
-				ROS_DEBUG_STREAM("start time" << start_time);
-				ROS_DEBUG_STREAM("stop_time" << stop_time);
-				double running_time = (time_now - start_time).toNSec(); 
-				ROS_DEBUG_STREAM("time_diff time_now - start_time:(nsec) " <<running_time);
-				double stoppin_time = (time_now - stop_time).toNSec();
-				ROS_DEBUG_STREAM("stoppin_time" <<stoppin_time);
-				//reducing number of function calls:
 				auto time_now_nsecs = time_now.toNSec();
-				//ROS_INFO_STREAM("start_time" <<start_time.toSec() << "stop_time" << stop_time.toSec());
-				if (time_now_nsecs < last_time.toNSec())
-				{
-					ROS_INFO_STREAM("time now" << time_now.toSec());
-					ROS_INFO_STREAM("last time" << last_time.toSec());
-					ROS_WARN_STREAM("Time travel! resetting ");
-
-				}
-				//if (running_time > 0 && !started)
 				if ((time_now_nsecs>start_time_nsecs && time_now_nsecs<stop_time_nsecs) && !started)
 				{
 					initial_time = time_now_nsecs;
-					ROS_INFO_STREAM("Rising edge. Initial_time:" << initial_time);
-					ROS_INFO_STREAM("time now" <<time_now);
-					ROS_INFO_STREAM("start time" << start_time);
-					ROS_INFO_STREAM("stop_time" << stop_time);
-					//ROS_INFO_STREAM("running_time (time_now - start_time):int [nsec] " << running_time);
-					ros::Time maximum_possible_time_to_play = time_now + ros::Duration(table_final_time);
-					ROS_INFO_STREAM("Maximum_possible time to play:" << maximum_possible_time_to_play );
 					started = true;
 				}
-				//else if (stoppin_time > 0 && started)
 				if ((time_now_nsecs>stop_time_nsecs || time_now_nsecs<start_time_nsecs) && started)
 				{
-					ROS_INFO_STREAM("time now" <<time_now);
-					ROS_INFO_STREAM("start time" << start_time);
-					ROS_INFO_STREAM("stop_time" << stop_time);
-					ROS_INFO_STREAM("Lowering edge");
-					//ROS_INFO_STREAM("stoppin_time (time_now - stop_time):int [nsec] " << stoppin_time);
 					started = false;
 				}
-				if(time_now == start_time || time_now == stop_time)
-				{
-					ROS_ERROR_STREAM("time now is equal to start_time or stop_time");
-				}
-
 				if (started)
 				{
 					double publishing_time = (time_now_nsecs - initial_time)/1000000000.0;
-					publish_once(publishing_time);
-					ROS_DEBUG_STREAM("publishing time:" << publishing_time);
-					ROS_DEBUG_STREAM("time diff: " << time_now.toSec()-last_time.toSec());
+					publish_once();
+					i++;
 					if (!ros::ok())
 						return false;
-					//i++;
 				}
-				last_time = time_now;
 				ros::spinOnce();
 				rate->sleep();
 			}

@@ -3,7 +3,7 @@ project(opensimrt_bridge)
 
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
-add_compile_options(-std=c++17)
+add_compile_options(-std=c++17 -O3)
 
 find_package(catkin REQUIRED COMPONENTS
   opensimrt

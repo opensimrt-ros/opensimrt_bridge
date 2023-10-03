@@ -7,6 +7,7 @@
 #include "opensimrt_msgs/LabelsSrv.h"
 #include "ros/node_handle.h"
 #include "ros/publisher.h"
+#include "boost/format.hpp"
 
 class IkPublisher
 {
@@ -57,13 +58,13 @@ class IkPublisher
 			nh.param<int>("spline_order", splineOrder, 0);
 			nh.param<int>("delay", delay, 0);
 
-			pub = nh.advertise<opensimrt_msgs::CommonTimed>("output", 1000);
+			pub = nh.advertise<opensimrt_msgs::CommonTimed>("output", 1);
 			outLabelsSrv = nh.advertiseService("out_labels", &IkPublisher::outLabels, this);
 			if(publish_filtered)
 			{
 				setFilter();
 				// initialize filtered publisher
-				pub_filtered = nh.advertise<opensimrt_msgs::PosVelAccTimed>("output_filtered", 1000);
+				pub_filtered = nh.advertise<opensimrt_msgs::PosVelAccTimed>("output_filtered", 1);
 
 			}
 
@@ -73,7 +74,7 @@ class IkPublisher
 		{
 			if (t <= last_published_time)
 			{
-				ROS_ERROR_STREAM("I am getting an incorrect time:" << t << "which is smaller or equal to the last time I received!!! last_time:" <<last_published_time
+				ROS_ERROR_STREAM("I am getting an incorrect time:" << boost::format("%11.6f") % t << "which is smaller or equal to the last time I received!!! last_time:" << boost::format("%11.6f") %  last_published_time
 						<< "I am adding a bit of a time correction (" << last_time_minimal_time_difference << ") to this sample to keep things running, but this is a mistake, please fix it!");
 				t+=last_time_minimal_time_difference;
 			}
