@@ -151,6 +151,8 @@ class TablePublisher
 			//This is severely untested stuff. it may work by coincidence alone
 			auto time_now = ros::Time::now();
 			auto last_time = time_now;
+			auto start_time_nsecs = start_time.toNSec();
+			auto stop_time_nsecs = stop_time.toNSec();
 			bool started = false;
 			while(ros::ok())
 			{
@@ -162,8 +164,10 @@ class TablePublisher
 				ROS_DEBUG_STREAM("time_diff time_now - start_time:(nsec) " <<running_time);
 				double stoppin_time = (time_now - stop_time).toNSec();
 				ROS_DEBUG_STREAM("stoppin_time" <<stoppin_time);
+				//reducing number of function calls:
+				auto time_now_nsecs = time_now.toNSec();
 				//ROS_INFO_STREAM("start_time" <<start_time.toSec() << "stop_time" << stop_time.toSec());
-				if (time_now.toNSec() < last_time.toNSec())
+				if (time_now_nsecs < last_time.toNSec())
 				{
 					ROS_INFO_STREAM("time now" << time_now.toSec());
 					ROS_INFO_STREAM("last time" << last_time.toSec());
@@ -171,9 +175,9 @@ class TablePublisher
 
 				}
 				//if (running_time > 0 && !started)
-				if ((time_now.toNSec()>start_time.toNSec() && time_now.toNSec()<stop_time.toNSec()) && !started)
+				if ((time_now_nsecs>start_time_nsecs && time_now_nsecs<stop_time_nsecs) && !started)
 				{
-					initial_time = time_now.toNSec();
+					initial_time = time_now_nsecs;
 					ROS_INFO_STREAM("Rising edge. Initial_time:" << initial_time);
 					ROS_INFO_STREAM("time now" <<time_now);
 					ROS_INFO_STREAM("start time" << start_time);
@@ -184,7 +188,7 @@ class TablePublisher
 					started = true;
 				}
 				//else if (stoppin_time > 0 && started)
-				if ((time_now.toNSec()>stop_time.toNSec() || time_now.toNSec()<start_time.toNSec()) && started)
+				if ((time_now_nsecs>stop_time_nsecs || time_now_nsecs<start_time_nsecs) && started)
 				{
 					ROS_INFO_STREAM("time now" <<time_now);
 					ROS_INFO_STREAM("start time" << start_time);
@@ -200,7 +204,7 @@ class TablePublisher
 
 				if (started)
 				{
-					double publishing_time = (time_now.toNSec() - initial_time)/1000000000.0;
+					double publishing_time = (time_now_nsecs - initial_time)/1000000000.0;
 					publish_once(publishing_time);
 					ROS_DEBUG_STREAM("publishing time:" << publishing_time);
 					ROS_DEBUG_STREAM("time diff: " << time_now.toSec()-last_time.toSec());
