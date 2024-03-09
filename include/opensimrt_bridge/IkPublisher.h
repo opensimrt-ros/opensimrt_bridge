@@ -17,6 +17,7 @@ class IkPublisher
 		int splineOrder, memory, delay;
 		std::vector<std::string> output_labels;
 		OpenSimRT::LowPassSmoothFilter * ikfilter;
+		ros::NodeHandle n;
 		ros::NodeHandle nh{"~"};
 		ros::Publisher pub; //output
 		ros::Publisher pub_filtered; //output, but filtered
@@ -58,13 +59,13 @@ class IkPublisher
 			nh.param<int>("spline_order", splineOrder, 0);
 			nh.param<int>("delay", delay, 0);
 
-			pub = nh.advertise<opensimrt_msgs::CommonTimed>("output", 1);
-			outLabelsSrv = nh.advertiseService("out_labels", &IkPublisher::outLabels, this);
+			pub = n.advertise<opensimrt_msgs::CommonTimed>("output", 1);
+			outLabelsSrv = n.advertiseService("out_labels", &IkPublisher::outLabels, this);
 			if(publish_filtered)
 			{
 				setFilter();
 				// initialize filtered publisher
-				pub_filtered = nh.advertise<opensimrt_msgs::PosVelAccTimed>("output_filtered", 1);
+				pub_filtered = n.advertise<opensimrt_msgs::PosVelAccTimed>("output_filtered", 1);
 
 			}
 
