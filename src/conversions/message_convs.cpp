@@ -292,10 +292,11 @@ namespace Osb
 
 	}
 
-	opensimrt_msgs::MultiMessage get_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,SimTK::Vector vk)
+	opensimrt_msgs::MultiMessage get_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,SimTK::Vector vk, std::vector<opensimrt_msgs::Event> ee)
 	{
 		opensimrt_msgs::MultiMessage msg;
 		msg.header = h;
+		msg.events.list = ee;
 		for (auto qi:q)
 			msg.ik.data.push_back(qi);
 		opensimrt_msgs::OpenSimData vv;
@@ -305,10 +306,11 @@ namespace Osb
 		msg.time = t;
 		return msg;
 	}
-	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput)
+	opensimrt_msgs::MultiMessage get_SO_as_Multi(std_msgs::Header h, double t,SimTK::Vector q,OpenSimRT::MuscleOptimization::Output& soOutput, std::vector<opensimrt_msgs::Event> ee)
 	{
 		opensimrt_msgs::MultiMessage msg;
 		msg.header = h;
+		msg.events.list = ee;
 		for (auto qi:q)
 			msg.ik.data.push_back(qi);
 		opensimrt_msgs::OpenSimData soAm, soFm;
@@ -321,9 +323,9 @@ namespace Osb
 		msg.time = t;
 		return msg;
 	}
-	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput)
+	opensimrt_msgs::MultiMessagePosVelAcc get_SO_as_MultiPosVelAcc(std_msgs::Header h, double t,SimTK::Vector q, SimTK::Vector qDot, SimTK::Vector qDDot,OpenSimRT::MuscleOptimization::Output& soOutput, std::vector<opensimrt_msgs::Event> ee)
 	{
-		auto a_msg = get_SO_as_Multi(h, t, q, soOutput);
+		auto a_msg = get_SO_as_Multi(h, t, q, soOutput, ee);
 		opensimrt_msgs::MultiMessagePosVelAcc msg;
 		msg.d0_data = a_msg.ik;
 		msg.header = a_msg.header;

@@ -17,7 +17,10 @@
 #include "std_srvs/Empty.h"
 #include "std_srvs/EmptyRequest.h"
 #include "std_srvs/EmptyResponse.h"
+#include <cstddef>
 #include <cstdlib>
+#include <string>
+#include <vector>
 #include "opensimrt_bridge/IkPublisher.h"
 
 using namespace std;
@@ -50,6 +53,7 @@ class TablePublisher
 		double table_initial_time, table_final_time;
 		IkPublisher ik_pub;
 		bool async_run, running;
+		std::vector<bool> include_list;
 		TablePublisher()
 		{
 			ros::NodeHandle nh("~");
@@ -125,6 +129,44 @@ class TablePublisher
 
 			time_error_threshold = 10*resample_period; // in seconds
 
+
+
+			// publishes zeros in some columns
+			//
+			
+			std::vector<std::string> columns = qTable.getColumnLabels();
+
+			// needs to be a param list
+
+			//std::vector<std::string> exclude_list{"hip","adomen"};
+			std::vector<std::string> exclude_list;
+			nh.getParam("exclude_list", exclude_list);
+			if (exclude_list.size() == 0)
+			{
+				ROS_WARN("publishing everything");
+			}
+			else
+			{
+				for (auto excl:exclude_list)
+					ROS_WARN_STREAM("I will replace joint" << excl << " for zeros");
+			}
+
+			include_list.reserve(qTable.getNumColumns()); // why not
+
+			for (std::size_t i=0; i< columns.size();i++)
+			{
+				std::string dof_name= columns[i];
+				include_list[i] = true;
+				for (auto exclude_dof:exclude_list)
+				{
+					if (exclude_dof.compare(dof_name) == 0 )
+					{	
+						ROS_WARN_STREAM("will exclude" << columns[i]);
+						include_list[i]= false;
+					}
+				}
+
+			}
 
 
 		}
@@ -208,10 +250,22 @@ class TablePublisher
 			msg.time = t;
 			msg.offsettime = time_offset;
 
-			for (auto ele: qqqqq)
+
+			//for (auto ele: qqqqq)
+			for (size_t i=0;i<qqqqq.size(); i++)
 			{
-				ROS_DEBUG_STREAM("Element: " << ele);
-				msg.data.push_back(ele);
+				auto ele = qqqqq[i];
+				if (include_list[i])
+				{
+					ROS_DEBUG_STREAM("Element: " << ele);
+					msg.data.push_back(ele);}
+				else
+				{
+					//ROS_DEBUG_STREAM("skipped" << i);
+					//I am using qqqqq directly in the ik_pub ....
+					qqqqq[i] = 0;
+					msg.data.push_back(0);
+				}
 			}
 			ROS_DEBUG("finished reading table row into msg.");
 
